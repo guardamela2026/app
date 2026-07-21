@@ -17,7 +17,7 @@ export default async function Home() {
     <>
       <section style={{ padding: "56px 0 32px", textAlign: "center" }}>
         <h1 style={{ fontSize: "clamp(34px, 6vw, 56px)", marginBottom: 18 }}>
-          Escaneá. Guardá. Listo.
+          Escaneá, Guardá y Listo.
         </h1>
         <p
           className="muted"

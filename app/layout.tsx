@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display } from "next/font/google";
+import { Playfair_Display, Space_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { GuardadosMigrator } from "@/components/guardados-migrator";
@@ -9,6 +9,13 @@ const serif = Playfair_Display({
   style: ["normal", "italic"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-serif",
+  display: "swap",
+});
+
+const mono = Space_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-mono-next",
   display: "swap",
 });
 
@@ -24,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={serif.variable}>
+    <html lang="es" className={`${serif.variable} ${mono.variable}`}>
       <body>
         <GuardadosMigrator />
         <SiteHeader />

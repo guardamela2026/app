@@ -205,7 +205,7 @@ export function FichaEditor({
     >
       <form onSubmit={guardar} className="card" style={{ padding: 22 }}>
         <div className="section-title" style={{ marginTop: 0 }}>
-          HU-1 / HU-2 · Datos de la ficha
+          Datos de la ficha
         </div>
 
         <div className="field">

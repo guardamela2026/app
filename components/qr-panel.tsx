@@ -24,7 +24,7 @@ export function QrPanel({
   return (
     <div className="card" style={{ padding: 20 }}>
       <div className="section-title" style={{ marginTop: 0 }}>
-        HU-3 · Código QR
+        Código QR
       </div>
       {habilitado ? (
         <div style={{ textAlign: "center" }}>

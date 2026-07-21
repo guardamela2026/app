@@ -103,3 +103,4 @@ npm run dev      # http://localhost:3000
 - Fuera de alcance del MVP: generar la imagen de tarjeta dentro de la app
   (por ahora se sube), mensajería, pagos, analíticas de escaneo.
 
+

@@ -60,7 +60,7 @@ export function Feed({ empresas }: { empresas: EmpresaExpandida[] }) {
 
   return (
     <section style={{ padding: "8px 0 40px" }}>
-      <div className="section-title">HU-6 · Feed público con búsqueda</div>
+      <div className="section-title">Feed público con búsqueda</div>
 
       <div
         className="row"

@@ -1,10 +1,12 @@
-/* Guárdamela — sistema visual neo-brutalista editorial.
+/* Guardamela — sistema visual neo-brutalista editorial.
    Playfair Display (serif itálica) + Space Mono (labels/botones).
    Bordes 2px tinta, esquinas rectas, sombras offset, rotaciones. */
 
 :root {
-  --paper: oklch(96% 0.018 75); /* fondo de página */
-  --card: oklch(98% 0.01 80); /* superficie de tarjeta */
+  --paper: oklch(96% 0.018 75);
+  /* fondo de página */
+  --card: oklch(98% 0.01 80);
+  /* superficie de tarjeta */
   --paper-3: oklch(93% 0.022 75);
   --ink: oklch(18% 0.02 60);
   --ink-60: oklch(18% 0.02 60 / 0.6);
@@ -69,20 +71,49 @@ a {
 
 /* ── Animaciones ─────────────────────────────────────────────────── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 @keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
 }
+
 @keyframes floatY {
-  0%, 100% { transform: translateY(0) rotate(-6deg); }
-  50% { transform: translateY(-14px) rotate(-6deg); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-6deg);
+  }
+
+  50% {
+    transform: translateY(-14px) rotate(-6deg);
+  }
 }
+
 @keyframes toastIn {
-  from { opacity: 0; transform: translate(-50%, 20px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 /* ── Header ──────────────────────────────────────────────────────── */
@@ -94,6 +125,7 @@ a {
   background: oklch(96% 0.018 75 / 0.9);
   backdrop-filter: blur(6px);
 }
+
 .site-header__inner {
   max-width: 1080px;
   margin: 0 auto;
@@ -102,6 +134,7 @@ a {
   align-items: center;
   gap: 18px;
 }
+
 .brand {
   font-family: var(--font-mono);
   font-weight: 700;
@@ -113,6 +146,7 @@ a {
   gap: 3px;
   text-shadow: 3px 3px 0 var(--oro);
 }
+
 .brand__flag {
   display: inline-block;
   width: 12px;
@@ -121,12 +155,14 @@ a {
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%);
   transform: rotate(10deg) translateY(-2px);
 }
+
 .site-nav {
   margin-left: auto;
   display: flex;
   align-items: center;
   gap: 4px;
 }
+
 .site-nav a,
 .site-nav button {
   font-family: var(--font-mono);
@@ -140,6 +176,7 @@ a {
   border: none;
   cursor: pointer;
 }
+
 .site-nav a:hover,
 .site-nav button:hover {
   color: var(--ink);
@@ -178,26 +215,32 @@ a {
   transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
   text-align: center;
 }
+
 .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
+
 .btn--primary {
   background: var(--ink);
   color: var(--paper);
   border-color: var(--ink);
 }
+
 .btn--primary:hover:not(:disabled) {
   background: var(--terracota);
   transform: rotate(-1deg) scale(1.03);
 }
+
 .btn--ghost {
   background: transparent;
   color: var(--ink);
 }
+
 .btn--ghost:hover:not(:disabled) {
   background: var(--oro);
 }
+
 .btn--block {
   width: 100%;
 }
@@ -214,7 +257,8 @@ a {
   display: block;
   margin-bottom: 16px;
 }
-.field > label {
+
+.field>label {
   display: block;
   font-family: var(--font-mono);
   text-transform: uppercase;
@@ -224,6 +268,7 @@ a {
   color: var(--ink-60);
   margin-bottom: 6px;
 }
+
 .input,
 .textarea {
   width: 100%;
@@ -235,16 +280,19 @@ a {
   font-family: var(--font-serif), Georgia, serif;
   font-size: 16px;
 }
+
 .input:focus,
 .textarea:focus {
   outline: none;
   border-color: var(--terracota);
   box-shadow: 4px 4px 0 var(--oro);
 }
+
 .textarea {
   min-height: 84px;
   resize: vertical;
 }
+
 .hint {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -269,14 +317,17 @@ a {
   background: var(--card);
   color: var(--ink);
 }
+
 .chip--terracota {
   background: var(--terracota);
   color: var(--paper);
 }
+
 .chip--verde {
   background: var(--verde);
   color: var(--card);
 }
+
 .chip--warn {
   background: var(--oro);
   color: var(--ink);
@@ -293,9 +344,11 @@ a {
   padding: 2px;
   transition: transform 0.08s ease, color 0.15s ease;
 }
+
 .star--on {
   color: var(--terracota);
 }
+
 .star:active {
   transform: scale(1.25);
 }
@@ -325,6 +378,7 @@ a {
   background: var(--ink);
   padding: 13px 0;
 }
+
 .marquee__track {
   display: flex;
   width: max-content;
@@ -336,11 +390,13 @@ a {
   font-size: 20px;
   color: var(--paper);
 }
+
 .marquee__track span {
   display: flex;
   align-items: center;
   gap: 40px;
 }
+
 .marquee__sep {
   color: var(--terracota);
 }
@@ -351,19 +407,23 @@ a {
   font-size: 12px;
   color: var(--ink-40);
 }
-.stack > * + * {
+
+.stack>*+* {
   margin-top: var(--gap, 16px);
 }
+
 .row {
   display: flex;
   gap: 12px;
   align-items: center;
 }
+
 .grid-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 18px;
 }
+
 .empty {
   text-align: center;
   font-family: var(--font-mono);
@@ -372,6 +432,7 @@ a {
   padding: 48px 20px;
   border: 2px dashed var(--ink-40);
 }
+
 .section-title {
   font-family: var(--font-mono);
   font-size: 12px;

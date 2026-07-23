@@ -1,4 +1,4 @@
--- Guárdamela — schema inicial (MVP)
+-- Guardamela — schema inicial (MVP)
 -- Ejecutar en Supabase: SQL Editor -> pegar -> Run, o `supabase db push`.
 
 -- ── Extensiones ──────────────────────────────────────────────────────────

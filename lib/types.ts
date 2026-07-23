@@ -1,5 +1,13 @@
 export type GuardadoOrigen = "escaneo" | "estrella";
 
+export type PerfilRol = "persona" | "empresa";
+
+export interface Perfil {
+  id: string;
+  rol: PerfilRol;
+  created_at: string;
+}
+
 export interface Categoria {
   id: string;
   nombre: string;

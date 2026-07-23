@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getUsuarioConRol } from "@/lib/perfil";
 import { Feed } from "@/components/feed";
 import type { EmpresaExpandida } from "@/lib/types";
 
@@ -7,6 +8,9 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const supabase = await createClient();
+  const { rol } = await getUsuarioConRol();
+  // Una persona logueada no puede publicar: no le mostramos ese CTA.
+  const puedePublicar = rol !== "persona"; // sin login (null) o empresa
   const { data } = await supabase
     .from("empresas")
     .select("*, categorias(nombre), subcategorias(nombre)")
@@ -69,10 +73,18 @@ export default async function Home() {
           className="row"
           style={{ justifyContent: "center", gap: 14, marginTop: 34 }}
         >
-          <Link className="btn btn--primary" href="/login?role=empresa">
-            Publicar mi ficha
-          </Link>
-          <Link className="btn btn--ghost" href="/guardados">
+          {puedePublicar && (
+            <Link
+              className="btn btn--primary"
+              href={rol === "empresa" ? "/panel" : "/login?role=empresa"}
+            >
+              Publicar mi ficha
+            </Link>
+          )}
+          <Link
+            className={puedePublicar ? "btn btn--ghost" : "btn btn--primary"}
+            href="/guardados"
+          >
             Ver mis guardados
           </Link>
         </div>

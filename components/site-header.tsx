@@ -4,34 +4,41 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import type { PerfilRol } from "@/lib/types";
 
 export function SiteHeader() {
   const [authed, setAuthed] = useState<boolean | null>(null);
-  const [esEmpresa, setEsEmpresa] = useState(false);
+  const [rol, setRol] = useState<PerfilRol | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
 
-    async function sync(session: boolean, userId?: string) {
-      setAuthed(session);
-      if (!session || !userId) {
-        setEsEmpresa(false);
+    async function sync(session: unknown) {
+      const hasSession = !!session;
+      setAuthed(hasSession);
+      if (!hasSession) {
+        setRol(null);
+        return;
+      }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setRol(null);
         return;
       }
       const { data } = await supabase
         .from("profiles")
         .select("tipo")
-        .eq("id", userId)
-        .maybeSingle();
-      setEsEmpresa(data?.tipo === "empresa");
+        .eq("id", user.id)
+        .single();
+      setRol((data?.tipo as PerfilRol) ?? "persona");
     }
 
-    supabase.auth
-      .getSession()
-      .then(({ data }) => sync(!!data.session, data.session?.user.id));
+    supabase.auth.getSession().then(({ data }) => sync(data.session));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
-      sync(!!session, session?.user.id),
+      sync(session),
     );
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -46,7 +53,7 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="site-header__inner">
         <Link href="/" className="brand">
-          Guárdamela
+          Guardamela
           <span className="brand__flag" aria-hidden="true" />
         </Link>
         <nav className="site-nav">
@@ -54,7 +61,19 @@ export function SiteHeader() {
           <Link href="/guardados">Guardados</Link>
           {authed ? (
             <>
-              {esEmpresa && <Link href="/panel">Panel</Link>}
+              {rol && (
+                <span
+                  className={`role-badge role-badge--${rol}`}
+                  title={
+                    rol === "empresa"
+                      ? "Cuenta de empresa: podés publicar fichas."
+                      : "Cuenta de persona: guardás y explorás fichas."
+                  }
+                >
+                  {rol === "empresa" ? "🏢 Empresa" : "🙋 Persona"}
+                </span>
+              )}
+              {rol === "empresa" && <Link href="/panel">Panel</Link>}
               <button onClick={signOut}>Salir</button>
             </>
           ) : (

@@ -1,34 +1,22 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getUsuarioConRol } from "@/lib/perfil";
 import type { Empresa } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-async function getTipo(): Promise<{ userId: string; tipo: string } | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data } = await supabase
-    .from("profiles")
-    .select("tipo")
-    .eq("id", user.id)
-    .maybeSingle();
-  return { userId: user.id, tipo: data?.tipo ?? "persona" };
-}
-
 async function crearFicha() {
   "use server";
-  const perfil = await getTipo();
-  if (!perfil) redirect("/login?role=empresa&next=/panel");
-  // Sólo empresas publican fichas (además lo bloquea la RLS).
-  if (perfil.tipo !== "empresa") redirect("/panel");
+  const { userId, rol } = await getUsuarioConRol();
+  if (!userId) redirect("/login?role=empresa&next=/panel");
+  // Sólo las cuentas 'empresa' pueden publicar fichas. La RLS también lo
+  // exige, pero cortamos acá para no depender sólo de la base.
+  if (rol !== "empresa") redirect("/panel");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("empresas")
-    .insert({ owner_id: perfil.userId })
+    .insert({ owner_id: userId })
     .select("id")
     .single();
   if (error) throw error;
@@ -36,24 +24,26 @@ async function crearFicha() {
 }
 
 export default async function PanelPage() {
-  const perfil = await getTipo();
-  if (!perfil) redirect("/login?role=empresa&next=/panel");
+  const { userId, rol } = await getUsuarioConRol();
+  if (!userId) redirect("/login?role=empresa&next=/panel");
+  const esEmpresa = rol === "empresa";
 
-  // Cuenta persona: no puede publicar fichas.
-  if (perfil.tipo !== "empresa") {
+  if (!esEmpresa) {
     return (
-      <div style={{ padding: "48px 0", maxWidth: 560 }}>
+      <div style={{ padding: "28px 0" }}>
         <h1 style={{ fontSize: 30 }}>Panel</h1>
-        <div className="card" style={{ padding: 22, marginTop: 20 }}>
-          <span className="chip chip--warn">Cuenta persona</span>
-          <p style={{ marginTop: 14, fontSize: 17, lineHeight: 1.5 }}>
-            Esta cuenta es de tipo <strong>persona</strong>: sirve para guardar
-            fichas, no para publicarlas. Para publicar una ficha necesitás una
-            cuenta de <strong>empresa</strong>.
+        <div className="empty" style={{ marginTop: 24 }}>
+          <p style={{ marginBottom: 8 }}>
+            🙋 Tu cuenta es de <strong>persona</strong>.
           </p>
-          <div className="row" style={{ marginTop: 20, gap: 10 }}>
-            <Link className="btn btn--ghost" href="/">
-              Explorar
+          <p className="muted">
+            El panel de empresa es para publicar fichas. Con tu cuenta podés
+            explorar y guardar fichas, pero no crear las tuyas. Si querés
+            publicar, registrá una cuenta de empresa.
+          </p>
+          <div className="row" style={{ marginTop: 16, gap: 8 }}>
+            <Link className="btn btn--primary" href="/">
+              Explorar fichas
             </Link>
             <Link className="btn btn--ghost" href="/guardados">
               Mis guardados
@@ -68,7 +58,7 @@ export default async function PanelPage() {
   const { data } = await supabase
     .from("empresas")
     .select("*")
-    .eq("owner_id", perfil.userId)
+    .eq("owner_id", userId)
     .order("created_at", { ascending: false });
   const empresas = (data ?? []) as Empresa[];
 

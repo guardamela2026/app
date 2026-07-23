@@ -104,3 +104,5 @@ npm run dev      # http://localhost:3000
   (por ahora se sube), mensajería, pagos, analíticas de escaneo.
 
 
+
+

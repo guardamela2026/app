@@ -56,6 +56,7 @@ function LoginInner() {
           email,
           password,
           options: {
+            data: { tipo: role },
             emailRedirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(dest)}`,
           },
         });

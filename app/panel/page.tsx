@@ -1,20 +1,22 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getUsuarioConRol } from "@/lib/perfil";
 import type { Empresa } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 async function crearFicha() {
   "use server";
+  const { userId, rol } = await getUsuarioConRol();
+  if (!userId) redirect("/login?role=empresa&next=/panel");
+  // Sólo las cuentas 'empresa' pueden publicar fichas. La RLS también lo
+  // exige, pero cortamos acá para no depender sólo de la base.
+  if (rol !== "empresa") redirect("/panel");
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login?role=empresa&next=/panel");
   const { data, error } = await supabase
     .from("empresas")
-    .insert({ owner_id: user.id })
+    .insert({ owner_id: userId })
     .select("id")
     .single();
   if (error) throw error;
@@ -22,11 +24,11 @@ async function crearFicha() {
 }
 
 export default async function PanelPage() {
+  const { userId, rol } = await getUsuarioConRol();
+  if (!userId) redirect("/login?role=empresa&next=/panel");
+  const esEmpresa = rol === "empresa";
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login?role=empresa&next=/panel");
+  const user = { id: userId };
 
   const { data } = await supabase
     .from("empresas")
@@ -34,6 +36,32 @@ export default async function PanelPage() {
     .eq("owner_id", user.id)
     .order("created_at", { ascending: false });
   const empresas = (data ?? []) as Empresa[];
+
+  if (!esEmpresa) {
+    return (
+      <div style={{ padding: "28px 0" }}>
+        <h1 style={{ fontSize: 30 }}>Panel</h1>
+        <div className="empty" style={{ marginTop: 24 }}>
+          <p style={{ marginBottom: 8 }}>
+            🙋 Tu cuenta es de <strong>persona</strong>.
+          </p>
+          <p className="muted">
+            El panel de empresa es para publicar fichas. Con tu cuenta podés
+            explorar y guardar fichas, pero no crear las tuyas. Si querés
+            publicar, registrá una cuenta de empresa.
+          </p>
+          <div className="row" style={{ marginTop: 16, gap: 8 }}>
+            <Link className="btn btn--primary" href="/">
+              Explorar fichas
+            </Link>
+            <Link className="btn btn--ghost" href="/guardados">
+              Mis guardados
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "28px 0" }}>

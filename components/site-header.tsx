@@ -7,13 +7,31 @@ import { createClient } from "@/lib/supabase/client";
 
 export function SiteHeader() {
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [esEmpresa, setEsEmpresa] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => setAuthed(!!data.session));
+
+    async function sync(session: boolean, userId?: string) {
+      setAuthed(session);
+      if (!session || !userId) {
+        setEsEmpresa(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("profiles")
+        .select("tipo")
+        .eq("id", userId)
+        .maybeSingle();
+      setEsEmpresa(data?.tipo === "empresa");
+    }
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => sync(!!data.session, data.session?.user.id));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
-      setAuthed(!!session),
+      sync(!!session, session?.user.id),
     );
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -36,7 +54,7 @@ export function SiteHeader() {
           <Link href="/guardados">Guardados</Link>
           {authed ? (
             <>
-              <Link href="/panel">Panel</Link>
+              {esEmpresa && <Link href="/panel">Panel</Link>}
               <button onClick={signOut}>Salir</button>
             </>
           ) : (

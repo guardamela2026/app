@@ -12,6 +12,8 @@ export interface Categoria {
   id: string;
   nombre: string;
   nombre_normalizado: string;
+  /** Orden de presentación en los selects (menor primero). */
+  orden: number;
 }
 
 export interface Subcategoria {
@@ -19,6 +21,7 @@ export interface Subcategoria {
   categoria_id: string;
   nombre: string;
   nombre_normalizado: string;
+  orden: number;
 }
 
 export interface Empresa {

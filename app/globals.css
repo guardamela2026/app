@@ -245,6 +245,100 @@ a {
   min-height: 84px;
   resize: vertical;
 }
+
+/* ── Selector (desplegable propio) ───────────────────────────────────
+   El popup de un <select> nativo lo pinta el SO y el CSS no lo alcanza:
+   por eso el menú son divs. El campo cerrado imita a .input para que en
+   una misma fila no se distinga de un campo de texto. */
+.selector {
+  position: relative;
+}
+.selector__campo {
+  width: 100%;
+  height: 48px;
+  padding: 12px 14px;
+  border: var(--border);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+/* El texto largo se recorta en vez de empujar al chevron. */
+.selector__campo > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.selector__campo:focus-visible {
+  outline: none;
+  border-color: var(--terracota);
+  box-shadow: 4px 4px 0 var(--oro);
+}
+.selector__placeholder {
+  color: var(--ink-40);
+}
+.selector__chevron {
+  flex: none;
+  color: var(--terracota);
+  transition: transform 0.15s ease;
+}
+.selector__campo[aria-expanded="true"] .selector__chevron {
+  transform: rotate(180deg);
+}
+.selector__campo:disabled {
+  background: var(--paper-3);
+  color: var(--ink-40);
+  cursor: not-allowed;
+}
+.selector__campo:disabled .selector__chevron {
+  color: var(--ink-40);
+}
+
+.selector__menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--card);
+  border: var(--border);
+  /* Sombra offset dura: el gesto del sistema, sin blur. */
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 4px;
+}
+.selector__opcion {
+  padding: 9px 12px;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 15px;
+  cursor: pointer;
+  border: 2px solid transparent; /* reservado: evita saltos al resaltar */
+}
+/* Resaltado por mouse o teclado: mismo tratamiento, un solo estado. */
+.selector__opcion.is-activa {
+  background: var(--terracota);
+  color: var(--paper);
+}
+.selector__opcion.is-elegida {
+  font-weight: 700;
+}
+.selector__opcion.is-elegida:not(.is-activa) {
+  border-color: var(--ink);
+}
+.selector__vacio {
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-40);
+}
 .hint {
   font-family: var(--font-mono);
   font-size: 11px;

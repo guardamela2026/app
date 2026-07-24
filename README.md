@@ -1,4 +1,4 @@
-# Guárdamela
+# Guardamela
 
 Tarjetas de contacto empresariales vía QR. Las empresas publican su ficha,
 generan un QR que enlaza a su vista pública en modo lectura, y cualquier

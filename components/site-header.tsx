@@ -4,16 +4,41 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import type { PerfilRol } from "@/lib/types";
 
 export function SiteHeader() {
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [rol, setRol] = useState<PerfilRol | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => setAuthed(!!data.session));
+
+    async function sync(session: unknown) {
+      const hasSession = !!session;
+      setAuthed(hasSession);
+      if (!hasSession) {
+        setRol(null);
+        return;
+      }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setRol(null);
+        return;
+      }
+      const { data } = await supabase
+        .from("profiles")
+        .select("tipo")
+        .eq("id", user.id)
+        .single();
+      setRol((data?.tipo as PerfilRol) ?? "persona");
+    }
+
+    supabase.auth.getSession().then(({ data }) => sync(data.session));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
-      setAuthed(!!session),
+      sync(session),
     );
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -28,7 +53,7 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="site-header__inner">
         <Link href="/" className="brand">
-          Guárdamela
+          Guardamela
           <span className="brand__flag" aria-hidden="true" />
         </Link>
         <nav className="site-nav">
@@ -36,7 +61,19 @@ export function SiteHeader() {
           <Link href="/guardados">Guardados</Link>
           {authed ? (
             <>
-              <Link href="/panel">Panel</Link>
+              {rol && (
+                <span
+                  className={`role-badge role-badge--${rol}`}
+                  title={
+                    rol === "empresa"
+                      ? "Cuenta de empresa: podés publicar fichas."
+                      : "Cuenta de persona: guardás y explorás fichas."
+                  }
+                >
+                  {rol === "empresa" ? "🏢 Empresa" : "🙋 Persona"}
+                </span>
+              )}
+              {rol === "empresa" && <Link href="/panel">Panel</Link>}
               <button onClick={signOut}>Salir</button>
             </>
           ) : (

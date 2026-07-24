@@ -23,7 +23,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const e = await getEmpresa(id);
-  return { title: e?.nombre ? `${e.nombre} · Guárdamela` : "Guárdamela" };
+  return { title: e?.nombre ? `${e.nombre} · Guardamela` : "Guardamela" };
 }
 
 export default async function FichaPublicaPage({

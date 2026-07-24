@@ -30,7 +30,9 @@ function LoginInner() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(dest)}`,
+        // El rol viaja en el callback; el trigger lo aplica sólo en el primer
+        // alta (después queda fijo en el perfil). Ver app/auth/callback.
+        redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(dest)}&rol=${role}`,
       },
     });
     if (error) setErr(error.message);
@@ -56,6 +58,7 @@ function LoginInner() {
           email,
           password,
           options: {
+            data: { rol: role },
             emailRedirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(dest)}`,
           },
         });

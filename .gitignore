@@ -16,3 +16,7 @@ next-env.d.ts
 # misc
 *.tsbuildinfo
 .DS_Store
+
+# supabase (metadata local del CLI)
+supabase/.temp/
+supabase/.branches/

@@ -20,7 +20,7 @@ const mono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Guárdamela",
+  title: "Guardamela",
   description:
     "Tarjetas de contacto empresariales vía QR. Escaneá, guardá, listo.",
 };
@@ -37,7 +37,7 @@ export default function RootLayout({
         <SiteHeader />
         <div className="container">{children}</div>
         <footer className="site-footer">
-          Guárdamela — prototipo de producto, 2026.
+          Guardamela — prototipo de producto, 2026.
         </footer>
       </body>
     </html>

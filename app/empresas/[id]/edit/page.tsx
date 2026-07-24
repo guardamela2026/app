@@ -28,8 +28,8 @@ export default async function EditFichaPage({
   if (!empresa) notFound();
 
   const [{ data: categorias }, { data: subcategorias }] = await Promise.all([
-    supabase.from("categorias").select("*").order("nombre"),
-    supabase.from("subcategorias").select("*").order("nombre"),
+    supabase.from("categorias").select("*").order("orden").order("nombre"),
+    supabase.from("subcategorias").select("*").order("orden").order("nombre"),
   ]);
 
   return (

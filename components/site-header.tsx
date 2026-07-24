@@ -53,7 +53,7 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="site-header__inner">
         <Link href="/" className="brand">
-          Guárdamela
+          Guardamela
           <span className="brand__flag" aria-hidden="true" />
         </Link>
         <nav className="site-nav">

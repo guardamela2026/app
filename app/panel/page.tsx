@@ -27,15 +27,6 @@ export default async function PanelPage() {
   const { userId, rol } = await getUsuarioConRol();
   if (!userId) redirect("/login?role=empresa&next=/panel");
   const esEmpresa = rol === "empresa";
-  const supabase = await createClient();
-  const user = { id: userId };
-
-  const { data } = await supabase
-    .from("empresas")
-    .select("*")
-    .eq("owner_id", user.id)
-    .order("created_at", { ascending: false });
-  const empresas = (data ?? []) as Empresa[];
 
   if (!esEmpresa) {
     return (
@@ -62,6 +53,14 @@ export default async function PanelPage() {
       </div>
     );
   }
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("empresas")
+    .select("*")
+    .eq("owner_id", userId)
+    .order("created_at", { ascending: false });
+  const empresas = (data ?? []) as Empresa[];
 
   return (
     <div style={{ padding: "28px 0" }}>

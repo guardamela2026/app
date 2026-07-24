@@ -28,6 +28,8 @@ export interface Empresa {
   telefono: string | null;
   email: string | null;
   direccion: string | null;
+  /** Handle de Instagram normalizado (sin @ ni URL). */
+  instagram: string | null;
   categoria_id: string | null;
   subcategoria_id: string | null;
   imagen_url: string | null;

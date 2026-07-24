@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { normalize } from "@/lib/normalize";
 import { camposFaltantes } from "@/lib/ficha";
+import { instagramHandle, instagramUrl } from "@/lib/instagram";
 import { QrPanel } from "@/components/qr-panel";
 import type { Categoria, Empresa, Subcategoria } from "@/lib/types";
 
@@ -83,6 +84,7 @@ export function FichaEditor({
   const [telefono, setTelefono] = useState(empresa.telefono ?? "");
   const [email, setEmail] = useState(empresa.email ?? "");
   const [direccion, setDireccion] = useState(empresa.direccion ?? "");
+  const [instagram, setInstagram] = useState(empresa.instagram ?? "");
   const [categoria, setCategoria] = useState(
     categorias.find((c) => c.id === empresa.categoria_id)?.nombre ?? "",
   );
@@ -166,7 +168,18 @@ export function FichaEditor({
         imagen_url = `${pub.publicUrl}?v=${Date.now()}`;
       }
 
-      // 3. Ficha.
+      // 3. Instagram: se guarda el handle normalizado, no lo que se tipeó.
+      let handle: string | null = null;
+      if (instagram.trim()) {
+        handle = instagramHandle(instagram);
+        if (!handle) {
+          throw new Error(
+            "El Instagram no es válido. Usá tu usuario (ej. mi.negocio) o el link de tu perfil.",
+          );
+        }
+      }
+
+      // 4. Ficha.
       const { data: updated, error: uErr } = await supabase
         .from("empresas")
         .update({
@@ -174,6 +187,7 @@ export function FichaEditor({
           telefono: telefono.trim() || null,
           email: email.trim() || null,
           direccion: direccion.trim() || null,
+          instagram: handle,
           categoria_id,
           subcategoria_id,
           imagen_url,
@@ -281,6 +295,41 @@ export function FichaEditor({
             value={direccion}
             onChange={(e) => setDireccion(e.target.value)}
           />
+        </div>
+
+        <div className="field">
+          <label>Instagram</label>
+          <input
+            className="input"
+            value={instagram}
+            onChange={(e) => setInstagram(e.target.value)}
+            placeholder="mi.negocio"
+            inputMode="url"
+          />
+          {instagram.trim() ? (
+            instagramHandle(instagram) ? (
+              <p className="hint">
+                Se va a ver como{" "}
+                <a
+                  href={instagramUrl(instagramHandle(instagram)!)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "var(--terracota)" }}
+                >
+                  @{instagramHandle(instagram)}
+                </a>
+              </p>
+            ) : (
+              <p className="hint" style={{ color: "var(--terracota)" }}>
+                No parece un usuario válido. Usá tu usuario (ej. mi.negocio) o
+                el link de tu perfil.
+              </p>
+            )
+          ) : (
+            <p className="hint">
+              Tu usuario o el link de tu perfil. Opcional.
+            </p>
+          )}
         </div>
 
         <div className="field">

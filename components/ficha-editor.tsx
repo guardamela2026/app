@@ -3,69 +3,13 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { normalize } from "@/lib/normalize";
 import { camposFaltantes } from "@/lib/ficha";
 import { QrPanel } from "@/components/qr-panel";
+import { Selector } from "@/components/selector";
 import type { Categoria, Empresa, Subcategoria } from "@/lib/types";
 
 const TIPOS_OK = ["image/jpeg", "image/png", "image/webp"];
 const MAX_BYTES = 5 * 1024 * 1024;
-
-type SB = ReturnType<typeof createClient>;
-
-// find-or-create: sólo requiere SELECT + INSERT (no UPDATE sobre el catálogo
-// compartido). Ante carrera (unique violation) re-busca la fila ganadora.
-async function findOrCreateCategoria(supabase: SB, nombre: string): Promise<string> {
-  const norm = normalize(nombre);
-  const { data: found } = await supabase
-    .from("categorias")
-    .select("id")
-    .eq("nombre_normalizado", norm)
-    .maybeSingle();
-  if (found) return found.id;
-  const { data: created, error } = await supabase
-    .from("categorias")
-    .insert({ nombre: nombre.trim(), nombre_normalizado: norm })
-    .select("id")
-    .single();
-  if (!error && created) return created.id;
-  const { data: retry } = await supabase
-    .from("categorias")
-    .select("id")
-    .eq("nombre_normalizado", norm)
-    .maybeSingle();
-  if (retry) return retry.id;
-  throw error ?? new Error("No se pudo crear la categoría");
-}
-
-async function findOrCreateSubcategoria(
-  supabase: SB,
-  categoriaId: string,
-  nombre: string,
-): Promise<string> {
-  const norm = normalize(nombre);
-  const { data: found } = await supabase
-    .from("subcategorias")
-    .select("id")
-    .eq("categoria_id", categoriaId)
-    .eq("nombre_normalizado", norm)
-    .maybeSingle();
-  if (found) return found.id;
-  const { data: created, error } = await supabase
-    .from("subcategorias")
-    .insert({ categoria_id: categoriaId, nombre: nombre.trim(), nombre_normalizado: norm })
-    .select("id")
-    .single();
-  if (!error && created) return created.id;
-  const { data: retry } = await supabase
-    .from("subcategorias")
-    .select("id")
-    .eq("categoria_id", categoriaId)
-    .eq("nombre_normalizado", norm)
-    .maybeSingle();
-  if (retry) return retry.id;
-  throw error ?? new Error("No se pudo crear la sub-categoría");
-}
 
 export function FichaEditor({
   empresa,
@@ -83,11 +27,9 @@ export function FichaEditor({
   const [telefono, setTelefono] = useState(empresa.telefono ?? "");
   const [email, setEmail] = useState(empresa.email ?? "");
   const [direccion, setDireccion] = useState(empresa.direccion ?? "");
-  const [categoria, setCategoria] = useState(
-    categorias.find((c) => c.id === empresa.categoria_id)?.nombre ?? "",
-  );
-  const [subcategoria, setSubcategoria] = useState(
-    subcategorias.find((s) => s.id === empresa.subcategoria_id)?.nombre ?? "",
+  const [categoriaId, setCategoriaId] = useState(empresa.categoria_id ?? "");
+  const [subcategoriaId, setSubcategoriaId] = useState(
+    empresa.subcategoria_id ?? "",
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(empresa.imagen_url);
@@ -101,16 +43,21 @@ export function FichaEditor({
   const publicUrl = `${base}/empresas/${empresa.id}`;
   const faltan = camposFaltantes(saved);
 
-  // Sugerencias de sub-categoría acordes a la categoría tipeada.
-  const subSugeridas = useMemo(() => {
-    const catId = categorias.find(
-      (c) => c.nombre_normalizado === normalize(categoria),
-    )?.id;
-    const list = catId
-      ? subcategorias.filter((s) => s.categoria_id === catId)
-      : subcategorias;
-    return Array.from(new Set(list.map((s) => s.nombre)));
-  }, [categoria, categorias, subcategorias]);
+  // Sub-categorías de la categoría elegida. Sin categoría, el select va vacío
+  // y deshabilitado: obliga a elegir de arriba hacia abajo.
+  const subsDeCategoria = useMemo(
+    () =>
+      categoriaId
+        ? subcategorias.filter((s) => s.categoria_id === categoriaId)
+        : [],
+    [categoriaId, subcategorias],
+  );
+
+  // Cambiar de categoría invalida la sub elegida (pertenecía a otra rama).
+  function onCambiarCategoria(nuevaId: string) {
+    setCategoriaId(nuevaId);
+    setSubcategoriaId("");
+  }
 
   function onPickImage(file: File | null) {
     setError(null);
@@ -134,19 +81,9 @@ export function FichaEditor({
     setSaving(true);
     const supabase = createClient();
     try {
-      // 1. Categoría / sub-categoría (se crean al momento si no existen).
-      let categoria_id: string | null = null;
-      let subcategoria_id: string | null = null;
-      if (categoria.trim()) {
-        categoria_id = await findOrCreateCategoria(supabase, categoria);
-        if (subcategoria.trim()) {
-          subcategoria_id = await findOrCreateSubcategoria(
-            supabase,
-            categoria_id,
-            subcategoria,
-          );
-        }
-      }
+      // 1. Categoría / sub-categoría: ids del catálogo fijo, nada que crear.
+      const categoria_id = categoriaId || null;
+      const subcategoria_id = categoria_id ? subcategoriaId || null : null;
 
       // 2. Imagen (opcional) -> Storage.
       let imagen_url = saved.imagen_url;
@@ -220,38 +157,33 @@ export function FichaEditor({
         <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
           <div className="field" style={{ flex: 1 }}>
             <label>Categoría</label>
-            <input
-              className="input"
-              list="cats"
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
-              placeholder="Ej: Gastronomía"
+            <Selector
+              label="Categoría"
+              value={categoriaId}
+              onChange={onCambiarCategoria}
+              opciones={categorias}
+              placeholder="Elegí una categoría"
             />
-            <datalist id="cats">
-              {categorias.map((c) => (
-                <option key={c.id} value={c.nombre} />
-              ))}
-            </datalist>
           </div>
           <div className="field" style={{ flex: 1 }}>
             <label>Sub-categoría</label>
-            <input
-              className="input"
-              list="subs"
-              value={subcategoria}
-              onChange={(e) => setSubcategoria(e.target.value)}
-              placeholder="Ej: Cafetería"
+            <Selector
+              label="Sub-categoría"
+              value={subcategoriaId}
+              onChange={setSubcategoriaId}
+              opciones={subsDeCategoria}
+              placeholder={
+                categoriaId
+                  ? "Elegí una sub-categoría"
+                  : "Elegí primero una categoría"
+              }
+              disabled={!categoriaId}
             />
-            <datalist id="subs">
-              {subSugeridas.map((s) => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
           </div>
         </div>
         <p className="hint" style={{ marginTop: -6, marginBottom: 16 }}>
-          Texto libre: si no existe, se crea y queda disponible para otras
-          empresas.
+          Si tu rubro no aparece, elegí la opción “Otro” de la categoría más
+          cercana.
         </p>
 
         <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>

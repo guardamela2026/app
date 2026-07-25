@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AutoGuardar } from "@/components/auto-guardar";
+import { instagramUrl } from "@/lib/instagram";
 import type { EmpresaExpandida } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -78,6 +79,20 @@ export default async function FichaPublicaPage({
                 <span>📍</span>
                 <span>{e.direccion}</span>
               </div>
+            )}
+            {e.instagram && (
+              <a
+                href={instagramUrl(e.instagram)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="row"
+                style={{ gap: 10, color: "var(--terracota)" }}
+              >
+                <span>📷</span>
+                <span style={{ textDecoration: "underline" }}>
+                  @{e.instagram}
+                </span>
+              </a>
             )}
           </div>
 

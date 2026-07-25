@@ -8,6 +8,7 @@ import {
   removeEmpresa,
   onGuardadosChange,
 } from "@/lib/guardados";
+import { Selector } from "@/components/selector";
 import type { EmpresaExpandida } from "@/lib/types";
 
 export function Feed({ empresas }: { empresas: EmpresaExpandida[] }) {
@@ -43,6 +44,23 @@ export function Feed({ empresas }: { empresas: EmpresaExpandida[] }) {
     [empresas, cat],
   );
 
+  // El filtro usa nombres como valor (no ids): cada opción se identifica por
+  // su propio nombre. La primera limpia el filtro (equivale al value="").
+  const opcionesCat = useMemo(
+    () => [
+      { id: "", nombre: "Todas las categorías" },
+      ...categorias.map((c) => ({ id: c, nombre: c })),
+    ],
+    [categorias],
+  );
+  const opcionesSub = useMemo(
+    () => [
+      { id: "", nombre: "Todas las sub-categorías" },
+      ...subcategorias.map((s) => ({ id: s, nombre: s })),
+    ],
+    [subcategorias],
+  );
+
   const resultados = useMemo(() => {
     const q = query.trim().toLowerCase();
     return empresas.filter((e) => {
@@ -73,35 +91,27 @@ export function Feed({ empresas }: { empresas: EmpresaExpandida[] }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <select
-          className="input"
-          style={{ flex: "1 1 160px" }}
-          value={cat}
-          onChange={(e) => {
-            setCat(e.target.value);
-            setSub("");
-          }}
-        >
-          <option value="">Todas las categorías</option>
-          {categorias.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        <select
-          className="input"
-          style={{ flex: "1 1 160px" }}
-          value={sub}
-          onChange={(e) => setSub(e.target.value)}
-        >
-          <option value="">Todas las sub-categorías</option>
-          {subcategorias.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+        <div style={{ flex: "1 1 160px" }}>
+          <Selector
+            label="Filtrar por categoría"
+            value={cat}
+            onChange={(v) => {
+              setCat(v);
+              setSub("");
+            }}
+            opciones={opcionesCat}
+            placeholder="Todas las categorías"
+          />
+        </div>
+        <div style={{ flex: "1 1 160px" }}>
+          <Selector
+            label="Filtrar por sub-categoría"
+            value={sub}
+            onChange={setSub}
+            opciones={opcionesSub}
+            placeholder="Todas las sub-categorías"
+          />
+        </div>
       </div>
 
       {resultados.length === 0 ? (

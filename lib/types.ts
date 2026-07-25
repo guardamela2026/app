@@ -12,6 +12,8 @@ export interface Categoria {
   id: string;
   nombre: string;
   nombre_normalizado: string;
+  /** Orden de presentación en los selects (menor primero). */
+  orden: number;
 }
 
 export interface Subcategoria {
@@ -19,6 +21,7 @@ export interface Subcategoria {
   categoria_id: string;
   nombre: string;
   nombre_normalizado: string;
+  orden: number;
 }
 
 export interface Empresa {
@@ -28,6 +31,8 @@ export interface Empresa {
   telefono: string | null;
   email: string | null;
   direccion: string | null;
+  /** Handle de Instagram normalizado (sin @ ni URL). */
+  instagram: string | null;
   categoria_id: string | null;
   subcategoria_id: string | null;
   imagen_url: string | null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { camposFaltantes } from "@/lib/ficha";
@@ -35,6 +35,7 @@ export function FichaEditor({
     empresa.subcategoria_id ?? "",
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(empresa.imagen_url);
   const [posX, setPosX] = useState(empresa.imagen_pos_x ?? 50);
   const [posY, setPosY] = useState(empresa.imagen_pos_y ?? 50);
@@ -57,6 +58,14 @@ export function FichaEditor({
         : [],
     [categoriaId, subcategorias],
   );
+
+  // Requisitos mínimos, en vivo, para habilitar el botón de guardar.
+  // (La validación dura vuelve a chequearse en guardar(), por las dudas.)
+  const listaParaGuardar =
+    nombre.trim() !== "" &&
+    categoriaId !== "" &&
+    subcategoriaId !== "" &&
+    (imageFile !== null || (saved.imagen_url?.trim() ?? "") !== "");
 
   // Cambiar de categoría invalida la sub elegida (pertenecía a otra rama).
   function onCambiarCategoria(nuevaId: string) {
@@ -89,6 +98,17 @@ export function FichaEditor({
     setSaving(true);
     const supabase = createClient();
     try {
+      // 0. Requisitos mínimos para guardar (sobre el estado del formulario,
+      //    contando el archivo recién elegido aunque todavía no se haya subido).
+      const faltan: string[] = [];
+      if (!nombre.trim()) faltan.push("el nombre");
+      if (!categoriaId) faltan.push("la categoría");
+      else if (!subcategoriaId) faltan.push("la sub-categoría");
+      if (!imageFile && !saved.imagen_url?.trim()) faltan.push("la imagen");
+      if (faltan.length > 0) {
+        throw new Error(`Falta completar: ${faltan.join(", ")}.`);
+      }
+
       // 1. Categoría / sub-categoría: ids del catálogo fijo, nada que crear.
       const categoria_id = categoriaId || null;
       const subcategoria_id = categoria_id ? subcategoriaId || null : null;
@@ -166,9 +186,15 @@ export function FichaEditor({
         <div className="section-title" style={{ marginTop: 0 }}>
           Datos de la ficha
         </div>
+        <p className="hint" style={{ marginTop: -6, marginBottom: 16 }}>
+          Los campos con <span style={{ color: "var(--terracota)" }}>*</span> son
+          obligatorios para guardar.
+        </p>
 
         <div className="field">
-          <label>Nombre de la empresa</label>
+          <label>
+            Nombre de la empresa <span style={{ color: "var(--terracota)" }}>*</span>
+          </label>
           <input
             className="input"
             value={nombre}
@@ -178,7 +204,9 @@ export function FichaEditor({
 
         <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
           <div className="field" style={{ flex: 1 }}>
-            <label>Categoría</label>
+            <label>
+              Categoría <span style={{ color: "var(--terracota)" }}>*</span>
+            </label>
             <Selector
               label="Categoría"
               value={categoriaId}
@@ -188,7 +216,9 @@ export function FichaEditor({
             />
           </div>
           <div className="field" style={{ flex: 1 }}>
-            <label>Sub-categoría</label>
+            <label>
+              Sub-categoría <span style={{ color: "var(--terracota)" }}>*</span>
+            </label>
             <Selector
               label="Sub-categoría"
               value={subcategoriaId}
@@ -273,12 +303,29 @@ export function FichaEditor({
         </div>
 
         <div className="field">
-          <label>Imagen de la tarjeta</label>
+          <label>
+            Imagen de la tarjeta <span style={{ color: "var(--terracota)" }}>*</span>
+          </label>
+          {/* Input nativo oculto: el botón con estilos de la app lo dispara. */}
           <input
+            ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={(e) => onPickImage(e.target.files?.[0] ?? null)}
+            style={{ display: "none" }}
           />
+          <div className="row" style={{ gap: 12, alignItems: "center" }}>
+            <button
+              type="button"
+              className="btn btn--ghost"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {preview ? "Cambiar imagen" : "Seleccionar imagen"}
+            </button>
+            <span className="hint" style={{ marginTop: 0 }}>
+              {imageFile?.name ?? "Ningún archivo seleccionado"}
+            </span>
+          </div>
           <p className="hint">JPG, PNG o WEBP · hasta 5 MB · para tu ficha pública.</p>
           {preview && (
             <ImageFocus
@@ -304,9 +351,18 @@ export function FichaEditor({
           </p>
         )}
 
-        <button className="btn btn--primary" disabled={saving}>
+        <button
+          className="btn btn--primary"
+          disabled={saving || !listaParaGuardar}
+        >
           {saving ? "Guardando..." : "Guardar ficha"}
         </button>
+        {!listaParaGuardar && (
+          <p className="hint" style={{ marginTop: 8 }}>
+            Completá los campos con{" "}
+            <span style={{ color: "var(--terracota)" }}>*</span> para guardar.
+          </p>
+        )}
       </form>
 
       <div className="stack" style={{ "--gap": "18px" } as React.CSSProperties}>

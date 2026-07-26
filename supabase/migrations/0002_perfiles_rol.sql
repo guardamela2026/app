@@ -1,12 +1,18 @@
 -- Guárdamela — rol de usuario (persona | empresa) sobre la tabla `profiles`
 -- Ejecutar en Supabase: SQL Editor -> pegar -> Run.
 --
--- IMPORTANTE: la tabla ya existe como `public.profiles` con la columna `tipo`
--- (text). Esta migración NO la crea de nuevo: agrega el trigger de alta, el
--- backfill, el helper y la policy que faltaban para que el rol funcione y para
+-- Crea `public.profiles` (id, tipo) si no existe, y agrega el trigger de
+-- alta, el backfill, el helper y la policy que hacen que el rol funcione y
 -- que SÓLO las cuentas 'empresa' puedan crear fichas.
 --
 -- Valores esperados en profiles.tipo: 'persona' | 'empresa'.
+
+-- ── Tabla ─────────────────────────────────────────────────────────────────
+create table if not exists public.profiles (
+  id         uuid primary key references auth.users(id) on delete cascade,
+  tipo       text not null default 'persona' check (tipo in ('persona', 'empresa')),
+  created_at timestamptz not null default now()
+);
 
 -- ── Alta automática de perfil al registrarse ─────────────────────────────
 -- Lee el rol desde raw_user_meta_data.rol (lo manda el signup de la app).

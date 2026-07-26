@@ -7,6 +7,7 @@ import { camposFaltantes } from "@/lib/ficha";
 import { instagramHandle, instagramUrl } from "@/lib/instagram";
 import { QrPanel } from "@/components/qr-panel";
 import { Selector } from "@/components/selector";
+import { ImageFocus } from "@/components/image-focus";
 import type { Categoria, Empresa, Subcategoria } from "@/lib/types";
 
 const TIPOS_OK = ["image/jpeg", "image/png", "image/webp"];
@@ -35,6 +36,8 @@ export function FichaEditor({
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(empresa.imagen_url);
+  const [posX, setPosX] = useState(empresa.imagen_pos_x ?? 50);
+  const [posY, setPosY] = useState(empresa.imagen_pos_y ?? 50);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
@@ -74,6 +77,9 @@ export function FichaEditor({
     }
     setImageFile(file);
     setPreview(URL.createObjectURL(file));
+    // El encuadre anterior no aplica a otra foto: se vuelve al centro.
+    setPosX(50);
+    setPosY(50);
   }
 
   async function guardar(e: React.FormEvent) {
@@ -128,6 +134,8 @@ export function FichaEditor({
           categoria_id,
           subcategoria_id,
           imagen_url,
+          imagen_pos_x: Math.round(posX),
+          imagen_pos_y: Math.round(posY),
         })
         .eq("id", empresa.id)
         .select("*")
@@ -273,15 +281,13 @@ export function FichaEditor({
           />
           <p className="hint">JPG, PNG o WEBP · hasta 5 MB · para tu ficha pública.</p>
           {preview && (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <ImageFocus
               src={preview}
-              alt="Vista previa"
-              style={{
-                marginTop: 10,
-                maxWidth: "100%",
-                borderRadius: 12,
-                border: "1px solid var(--line)",
+              posX={posX}
+              posY={posY}
+              onChange={(x, y) => {
+                setPosX(x);
+                setPosY(y);
               }}
             />
           )}

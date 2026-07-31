@@ -7,6 +7,7 @@ import { camposFaltantes } from "@/lib/ficha";
 import { instagramHandle, instagramUrl } from "@/lib/instagram";
 import { QrPanel } from "@/components/qr-panel";
 import { Selector } from "@/components/selector";
+import { DireccionInput } from "@/components/direccion-input";
 import { ImageFocus } from "@/components/image-focus";
 import type { Categoria, Empresa, Subcategoria } from "@/lib/types";
 
@@ -264,13 +265,11 @@ export function FichaEditor({
 
         <div className="field">
           <label>Dirección</label>
-          <input
-            className="input"
-            value={direccion}
-            onChange={(e) => setDireccion(e.target.value)}
-            placeholder="Calle 123, Ciudad"
-          />
-          <p className="hint">Se muestra con un botón “Cómo llegar” en la ficha.</p>
+          <DireccionInput value={direccion} onChange={setDireccion} />
+          <p className="hint">
+            Empezá a escribir y elegí del desplegable · se muestra con un botón
+            “Cómo llegar” en la ficha.
+          </p>
         </div>
 
         <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>

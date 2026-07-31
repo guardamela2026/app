@@ -260,6 +260,134 @@ a {
   animation-delay: var(--delay, 0ms);
 }
 
+/* Card interactiva (feed, guardados): al pasar el puntero se eleva apenas, con
+   sombra suave (con blur, no el bloque negro duro) y un realce de borde
+   terracota. Sólo en puntero fino: en touch un tap no debe dejarla "levantada". */
+.card--hover {
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out),
+    border-color 0.2s var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .card--hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 22px oklch(18% 0.02 60 / 0.16);
+    border-color: var(--terracota);
+  }
+  /* La imagen de la card respira un poco al hover. */
+  .card--hover:hover .card__img {
+    transform: scale(1.03);
+  }
+}
+.card__img {
+  transition: transform 0.35s var(--ease-out);
+}
+
+/* ── Filas de dato (ficha pública): icono + texto, con acción opcional ── */
+.dato-fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+}
+.dato-fila__ico {
+  flex: none;
+  color: var(--terracota);
+}
+.dato-fila--accion {
+  justify-content: flex-start;
+}
+.dato-fila__cta {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--terracota);
+  white-space: nowrap;
+}
+
+/* ── Puntuación (estrellas) ──────────────────────────────────────────── */
+.rating {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rating__resumen {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+}
+.rating__star-fill {
+  fill: var(--oro);
+  color: var(--oro);
+}
+.rating__votos {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-40);
+}
+.rating__estrellas {
+  display: inline-flex;
+  gap: 2px;
+}
+.rating__btn {
+  border: none;
+  background: none;
+  padding: 2px;
+  cursor: pointer;
+  line-height: 0;
+  transition: transform 0.14s var(--ease-out);
+}
+.rating__btn:disabled {
+  cursor: default;
+}
+.rating__btn:not(:disabled):active {
+  transform: scale(0.88);
+}
+.rating__star-on {
+  fill: var(--oro);
+  color: var(--oro);
+}
+.rating__star-off {
+  fill: none;
+  color: var(--ink-40);
+}
+
+/* ── Nota privada (Guardados) ───────────────────────────────────────── */
+.nota-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 10px;
+  border: 1px dashed var(--ink-40);
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 13px;
+  color: var(--ink);
+  text-align: left;
+  max-width: 100%;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.nota-chip:hover {
+  border-color: var(--terracota);
+  background: var(--paper-3);
+}
+.nota-chip__ico {
+  flex: none;
+  color: var(--terracota);
+}
+.nota-chip__vacia {
+  color: var(--ink-40);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* ── Inputs ──────────────────────────────────────────────────────── */
 .field {
   display: block;
@@ -377,6 +505,17 @@ a {
   /* Sombra offset dura: el gesto del sistema, sin blur. */
   box-shadow: 4px 4px 0 var(--ink);
   padding: 4px;
+  /* Entrada al montar: nace del trigger (arriba), no del centro.
+     @starting-style anima el primer frame sin JS. */
+  transform-origin: top center;
+  transition: opacity 0.16s var(--ease-out), transform 0.16s var(--ease-out);
+}
+
+@starting-style {
+  .selector__menu {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
 }
 
 .selector__opcion {
@@ -483,6 +622,30 @@ a {
 
 .star--on {
   color: var(--terracota);
+}
+
+/* Estrella flotante sobre la card: la card entera es un link, así que la
+   estrella va posicionada encima, con fondo para leerse sobre la imagen. */
+.star--flotante {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  background: var(--card);
+  border: var(--border);
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+/* El link que cubre toda la card: hereda color, sin subrayado. Como cubre
+   todo, es él quien lleva el cursor de "clickeable". */
+.card-link {
+  display: block;
+  color: inherit;
+  cursor: pointer;
 }
 
 /* Press: se hunde al apretar; al soltar vuelve a 1 con el ease-out (rebote

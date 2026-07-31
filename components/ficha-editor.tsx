@@ -29,6 +29,8 @@ export function FichaEditor({
   const [telefono, setTelefono] = useState(empresa.telefono ?? "");
   const [email, setEmail] = useState(empresa.email ?? "");
   const [direccion, setDireccion] = useState(empresa.direccion ?? "");
+  const [horario, setHorario] = useState(empresa.horario ?? "");
+  const [sitioWeb, setSitioWeb] = useState(empresa.sitio_web ?? "");
   const [instagram, setInstagram] = useState(empresa.instagram ?? "");
   const [categoriaId, setCategoriaId] = useState(empresa.categoria_id ?? "");
   const [subcategoriaId, setSubcategoriaId] = useState(
@@ -150,6 +152,8 @@ export function FichaEditor({
           telefono: telefono.trim() || null,
           email: email.trim() || null,
           direccion: direccion.trim() || null,
+          horario: horario.trim() || null,
+          sitio_web: sitioWeb.trim() || null,
           instagram: handle,
           categoria_id,
           subcategoria_id,
@@ -264,7 +268,32 @@ export function FichaEditor({
             className="input"
             value={direccion}
             onChange={(e) => setDireccion(e.target.value)}
+            placeholder="Calle 123, Ciudad"
           />
+          <p className="hint">Se muestra con un botón “Cómo llegar” en la ficha.</p>
+        </div>
+
+        <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
+          <div className="field" style={{ flex: 1 }}>
+            <label>Horario</label>
+            <textarea
+              className="textarea"
+              value={horario}
+              onChange={(e) => setHorario(e.target.value)}
+              placeholder={"Lun a Vie 9-18\nSáb 9-13"}
+              rows={2}
+            />
+          </div>
+          <div className="field" style={{ flex: 1 }}>
+            <label>Sitio web</label>
+            <input
+              className="input"
+              value={sitioWeb}
+              onChange={(e) => setSitioWeb(e.target.value)}
+              placeholder="misitio.com"
+              inputMode="url"
+            />
+          </div>
         </div>
 
         <div className="field">

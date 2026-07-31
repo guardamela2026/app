@@ -1,8 +1,12 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Turnstile, type TurnstileHandle } from "@/components/turnstile";
+
+// Con site key configurada, el captcha es obligatorio para email/contraseña.
+const CAPTCHA_ON = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
 type Role = "persona" | "empresa";
 type Mode = "login" | "register";
@@ -21,6 +25,8 @@ function LoginInner() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<TurnstileHandle>(null);
 
   const dest = role === "empresa" ? "/panel" : nextParam;
 
@@ -42,6 +48,12 @@ function LoginInner() {
     e.preventDefault();
     setErr(null);
     setMsg(null);
+
+    if (CAPTCHA_ON && !captchaToken) {
+      setErr("Completá la verificación anti-bots antes de continuar.");
+      return;
+    }
+
     setBusy(true);
     const supabase = createClient();
     try {
@@ -49,6 +61,7 @@ function LoginInner() {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
+          options: { captchaToken: captchaToken ?? undefined },
         });
         if (error) throw error;
         router.push(dest);
@@ -59,6 +72,7 @@ function LoginInner() {
           password,
           options: {
             data: { rol: role },
+            captchaToken: captchaToken ?? undefined,
             emailRedirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(dest)}`,
           },
         });
@@ -74,6 +88,12 @@ function LoginInner() {
       setErr(e instanceof Error ? e.message : "No se pudo completar.");
     } finally {
       setBusy(false);
+      // El token de Turnstile es de un solo uso: tras cualquier intento hay
+      // que pedir uno nuevo para el siguiente.
+      if (CAPTCHA_ON) {
+        setCaptchaToken(null);
+        captchaRef.current?.reset();
+      }
     }
   }
 
@@ -166,6 +186,7 @@ function LoginInner() {
               autoComplete={mode === "login" ? "current-password" : "new-password"}
             />
           </div>
+          <Turnstile ref={captchaRef} onToken={setCaptchaToken} />
           {err && (
             <p style={{ color: "var(--terracota)", fontSize: 13, marginBottom: 12 }}>
               {err}
@@ -176,7 +197,10 @@ function LoginInner() {
               {msg}
             </p>
           )}
-          <button className="btn btn--primary btn--block" disabled={busy}>
+          <button
+            className="btn btn--primary btn--block"
+            disabled={busy || (CAPTCHA_ON && !captchaToken)}
+          >
             {busy
               ? "..."
               : mode === "login"

@@ -123,20 +123,24 @@ export function Feed({ empresas }: { empresas: EmpresaExpandida[] }) {
             return (
               <div
                 key={e.id}
-                className="card card--entra"
+                className="card card--entra card--hover"
                 style={
                   {
                     overflow: "hidden",
+                    position: "relative",
                     // Stagger: sólo las primeras filas; el resto entra sin demora
                     // para no retrasar el contenido de más abajo.
                     "--delay": `${Math.min(i, 7) * 45}ms`,
                   } as React.CSSProperties
                 }
               >
-                <Link href={`/empresas/${e.id}`}>
+                {/* Toda la card navega a la ficha; la estrella (abajo) se saca
+                    del link y frena la propagación para guardar sin navegar. */}
+                <Link href={`/empresas/${e.id}`} className="card-link">
                   {e.imagen_url ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
+                      className="card__img"
                       src={e.imagen_url}
                       alt={e.nombre ?? ""}
                       style={{
@@ -149,38 +153,35 @@ export function Feed({ empresas }: { empresas: EmpresaExpandida[] }) {
                   ) : (
                     <div style={{ height: 150, background: "var(--paper-3)" }} />
                   )}
-                </Link>
-                <div style={{ padding: 16 }}>
-                  <div
-                    className="row"
-                    style={{ justifyContent: "space-between", alignItems: "flex-start" }}
-                  >
-                    <Link href={`/empresas/${e.id}`}>
-                      <h3 style={{ fontSize: 18 }}>{e.nombre}</h3>
-                    </Link>
-                    <button
-                      className={`star ${guardada ? "star--on" : ""}`}
-                      aria-label={guardada ? "Quitar de guardados" : "Guardar"}
-                      title={guardada ? "Guardada" : "Guardar"}
-                      onClick={() => toggle(e.id)}
+                  <div style={{ padding: 16 }}>
+                    <h3 style={{ fontSize: 18, paddingRight: 34 }}>{e.nombre}</h3>
+                    <div
+                      className="row"
+                      style={{ gap: 6, marginTop: 8, flexWrap: "wrap" }}
                     >
-                      {guardada ? "★" : "☆"}
-                    </button>
+                      {e.categorias?.nombre && (
+                        <span className="chip chip--terracota">
+                          {e.categorias.nombre}
+                        </span>
+                      )}
+                      {e.subcategorias?.nombre && (
+                        <span className="chip">{e.subcategorias.nombre}</span>
+                      )}
+                    </div>
                   </div>
-                  <div
-                    className="row"
-                    style={{ gap: 6, marginTop: 8, flexWrap: "wrap" }}
-                  >
-                    {e.categorias?.nombre && (
-                      <span className="chip chip--terracota">
-                        {e.categorias.nombre}
-                      </span>
-                    )}
-                    {e.subcategorias?.nombre && (
-                      <span className="chip">{e.subcategorias.nombre}</span>
-                    )}
-                  </div>
-                </div>
+                </Link>
+                <button
+                  className={`star star--flotante ${guardada ? "star--on" : ""}`}
+                  aria-label={guardada ? "Quitar de guardados" : "Guardar"}
+                  title={guardada ? "Guardada" : "Guardar"}
+                  onClick={(ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    toggle(e.id);
+                  }}
+                >
+                  {guardada ? "★" : "☆"}
+                </button>
               </div>
             );
           })}

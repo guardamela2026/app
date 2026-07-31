@@ -260,24 +260,26 @@ a {
   animation-delay: var(--delay, 0ms);
 }
 
-/* Card interactiva (feed, guardados): al pasar el puntero se eleva con sombra
-   offset dura, coherente con la estética (sin blur). Sólo en puntero fino:
-   en touch un tap no debe dejarla "levantada". */
+/* Card interactiva (feed, guardados): al pasar el puntero se eleva apenas, con
+   sombra suave (con blur, no el bloque negro duro) y un realce de borde
+   terracota. Sólo en puntero fino: en touch un tap no debe dejarla "levantada". */
 .card--hover {
-  transition: transform 0.18s var(--ease-out), box-shadow 0.18s var(--ease-out);
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out),
+    border-color 0.2s var(--ease-out);
 }
 @media (hover: hover) and (pointer: fine) {
   .card--hover:hover {
-    transform: translate(-3px, -3px);
-    box-shadow: 6px 6px 0 var(--ink);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 22px oklch(18% 0.02 60 / 0.16);
+    border-color: var(--terracota);
   }
   /* La imagen de la card respira un poco al hover. */
   .card--hover:hover .card__img {
-    transform: scale(1.04);
+    transform: scale(1.03);
   }
 }
 .card__img {
-  transition: transform 0.28s var(--ease-out);
+  transition: transform 0.35s var(--ease-out);
 }
 
 /* ── Filas de dato (ficha pública): icono + texto, con acción opcional ── */
@@ -620,6 +622,30 @@ a {
 
 .star--on {
   color: var(--terracota);
+}
+
+/* Estrella flotante sobre la card: la card entera es un link, así que la
+   estrella va posicionada encima, con fondo para leerse sobre la imagen. */
+.star--flotante {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  background: var(--card);
+  border: var(--border);
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+/* El link que cubre toda la card: hereda color, sin subrayado. Como cubre
+   todo, es él quien lleva el cursor de "clickeable". */
+.card-link {
+  display: block;
+  color: inherit;
+  cursor: pointer;
 }
 
 /* Press: se hunde al apretar; al soltar vuelve a 1 con el ease-out (rebote

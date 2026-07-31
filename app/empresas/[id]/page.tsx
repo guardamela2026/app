@@ -52,7 +52,10 @@ export default async function FichaPublicaPage({
 
       <article
         className="card"
-        style={{ overflow: "hidden", boxShadow: "6px 6px 0 var(--ink)" }}
+        style={{
+          overflow: "hidden",
+          boxShadow: "0 8px 24px oklch(18% 0.02 60 / 0.12)",
+        }}
       >
         {e.imagen_url && (
           /* eslint-disable-next-line @next/next/no-img-element */

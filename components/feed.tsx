@@ -118,10 +118,21 @@ export function Feed({ empresas }: { empresas: EmpresaExpandida[] }) {
         <div className="empty">No hay empresas que coincidan con la búsqueda.</div>
       ) : (
         <div className="grid-cards">
-          {resultados.map((e) => {
+          {resultados.map((e, i) => {
             const guardada = savedIds.has(e.id);
             return (
-              <div key={e.id} className="card" style={{ overflow: "hidden" }}>
+              <div
+                key={e.id}
+                className="card card--entra"
+                style={
+                  {
+                    overflow: "hidden",
+                    // Stagger: sólo las primeras filas; el resto entra sin demora
+                    // para no retrasar el contenido de más abajo.
+                    "--delay": `${Math.min(i, 7) * 45}ms`,
+                  } as React.CSSProperties
+                }
+              >
                 <Link href={`/empresas/${e.id}`}>
                   {e.imagen_url ? (
                     /* eslint-disable-next-line @next/next/no-img-element */

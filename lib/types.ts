@@ -31,9 +31,14 @@ export interface Empresa {
   telefono: string | null;
   email: string | null;
   direccion: string | null;
+  /** Handle de Instagram normalizado (sin @ ni URL). */
+  instagram: string | null;
   categoria_id: string | null;
   subcategoria_id: string | null;
   imagen_url: string | null;
+  /** Foco de la imagen (object-position en %, 0-100 por eje). Default 50/50. */
+  imagen_pos_x: number;
+  imagen_pos_y: number;
   ficha_completa: boolean;
   created_at: string;
   updated_at: string;

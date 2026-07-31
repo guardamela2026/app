@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { camposFaltantes } from "@/lib/ficha";
+import { instagramHandle, instagramUrl } from "@/lib/instagram";
 import { QrPanel } from "@/components/qr-panel";
 import { Selector } from "@/components/selector";
+import { ImageFocus } from "@/components/image-focus";
 import type { Categoria, Empresa, Subcategoria } from "@/lib/types";
 
 const TIPOS_OK = ["image/jpeg", "image/png", "image/webp"];
@@ -27,12 +29,16 @@ export function FichaEditor({
   const [telefono, setTelefono] = useState(empresa.telefono ?? "");
   const [email, setEmail] = useState(empresa.email ?? "");
   const [direccion, setDireccion] = useState(empresa.direccion ?? "");
+  const [instagram, setInstagram] = useState(empresa.instagram ?? "");
   const [categoriaId, setCategoriaId] = useState(empresa.categoria_id ?? "");
   const [subcategoriaId, setSubcategoriaId] = useState(
     empresa.subcategoria_id ?? "",
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(empresa.imagen_url);
+  const [posX, setPosX] = useState(empresa.imagen_pos_x ?? 50);
+  const [posY, setPosY] = useState(empresa.imagen_pos_y ?? 50);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
@@ -53,6 +59,14 @@ export function FichaEditor({
     [categoriaId, subcategorias],
   );
 
+  // Requisitos mínimos, en vivo, para habilitar el botón de guardar.
+  // (La validación dura vuelve a chequearse en guardar(), por las dudas.)
+  const listaParaGuardar =
+    nombre.trim() !== "" &&
+    categoriaId !== "" &&
+    subcategoriaId !== "" &&
+    (imageFile !== null || (saved.imagen_url?.trim() ?? "") !== "");
+
   // Cambiar de categoría invalida la sub elegida (pertenecía a otra rama).
   function onCambiarCategoria(nuevaId: string) {
     setCategoriaId(nuevaId);
@@ -72,6 +86,9 @@ export function FichaEditor({
     }
     setImageFile(file);
     setPreview(URL.createObjectURL(file));
+    // El encuadre anterior no aplica a otra foto: se vuelve al centro.
+    setPosX(50);
+    setPosY(50);
   }
 
   async function guardar(e: React.FormEvent) {
@@ -81,6 +98,17 @@ export function FichaEditor({
     setSaving(true);
     const supabase = createClient();
     try {
+      // 0. Requisitos mínimos para guardar (sobre el estado del formulario,
+      //    contando el archivo recién elegido aunque todavía no se haya subido).
+      const faltan: string[] = [];
+      if (!nombre.trim()) faltan.push("el nombre");
+      if (!categoriaId) faltan.push("la categoría");
+      else if (!subcategoriaId) faltan.push("la sub-categoría");
+      if (!imageFile && !saved.imagen_url?.trim()) faltan.push("la imagen");
+      if (faltan.length > 0) {
+        throw new Error(`Falta completar: ${faltan.join(", ")}.`);
+      }
+
       // 1. Categoría / sub-categoría: ids del catálogo fijo, nada que crear.
       const categoria_id = categoriaId || null;
       const subcategoria_id = categoria_id ? subcategoriaId || null : null;
@@ -103,7 +131,18 @@ export function FichaEditor({
         imagen_url = `${pub.publicUrl}?v=${Date.now()}`;
       }
 
-      // 3. Ficha.
+      // 3. Instagram: se guarda el handle normalizado, no lo que se tipeó.
+      let handle: string | null = null;
+      if (instagram.trim()) {
+        handle = instagramHandle(instagram);
+        if (!handle) {
+          throw new Error(
+            "El Instagram no es válido. Usá tu usuario (ej. mi.negocio) o el link de tu perfil.",
+          );
+        }
+      }
+
+      // 4. Ficha.
       const { data: updated, error: uErr } = await supabase
         .from("empresas")
         .update({
@@ -111,9 +150,12 @@ export function FichaEditor({
           telefono: telefono.trim() || null,
           email: email.trim() || null,
           direccion: direccion.trim() || null,
+          instagram: handle,
           categoria_id,
           subcategoria_id,
           imagen_url,
+          imagen_pos_x: Math.round(posX),
+          imagen_pos_y: Math.round(posY),
         })
         .eq("id", empresa.id)
         .select("*")
@@ -144,9 +186,15 @@ export function FichaEditor({
         <div className="section-title" style={{ marginTop: 0 }}>
           Datos de la ficha
         </div>
+        <p className="hint" style={{ marginTop: -6, marginBottom: 16 }}>
+          Los campos con <span style={{ color: "var(--terracota)" }}>*</span> son
+          obligatorios para guardar.
+        </p>
 
         <div className="field">
-          <label>Nombre de la empresa</label>
+          <label>
+            Nombre de la empresa <span style={{ color: "var(--terracota)" }}>*</span>
+          </label>
           <input
             className="input"
             value={nombre}
@@ -156,7 +204,9 @@ export function FichaEditor({
 
         <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
           <div className="field" style={{ flex: 1 }}>
-            <label>Categoría</label>
+            <label>
+              Categoría <span style={{ color: "var(--terracota)" }}>*</span>
+            </label>
             <Selector
               label="Categoría"
               value={categoriaId}
@@ -166,7 +216,9 @@ export function FichaEditor({
             />
           </div>
           <div className="field" style={{ flex: 1 }}>
-            <label>Sub-categoría</label>
+            <label>
+              Sub-categoría <span style={{ color: "var(--terracota)" }}>*</span>
+            </label>
             <Selector
               label="Sub-categoría"
               value={subcategoriaId}
@@ -216,23 +268,73 @@ export function FichaEditor({
         </div>
 
         <div className="field">
-          <label>Imagen de la tarjeta</label>
+          <label>Instagram</label>
           <input
+            className="input"
+            value={instagram}
+            onChange={(e) => setInstagram(e.target.value)}
+            placeholder="mi.negocio"
+            inputMode="url"
+          />
+          {instagram.trim() ? (
+            instagramHandle(instagram) ? (
+              <p className="hint">
+                Se va a ver como{" "}
+                <a
+                  href={instagramUrl(instagramHandle(instagram)!)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "var(--terracota)" }}
+                >
+                  @{instagramHandle(instagram)}
+                </a>
+              </p>
+            ) : (
+              <p className="hint" style={{ color: "var(--terracota)" }}>
+                No parece un usuario válido. Usá tu usuario (ej. mi.negocio) o
+                el link de tu perfil.
+              </p>
+            )
+          ) : (
+            <p className="hint">
+              Tu usuario o el link de tu perfil. Opcional.
+            </p>
+          )}
+        </div>
+
+        <div className="field">
+          <label>
+            Imagen de la tarjeta <span style={{ color: "var(--terracota)" }}>*</span>
+          </label>
+          {/* Input nativo oculto: el botón con estilos de la app lo dispara. */}
+          <input
+            ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={(e) => onPickImage(e.target.files?.[0] ?? null)}
+            style={{ display: "none" }}
           />
+          <div className="row" style={{ gap: 12, alignItems: "center" }}>
+            <button
+              type="button"
+              className="btn btn--ghost"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {preview ? "Cambiar imagen" : "Seleccionar imagen"}
+            </button>
+            <span className="hint" style={{ marginTop: 0 }}>
+              {imageFile?.name ?? "Ningún archivo seleccionado"}
+            </span>
+          </div>
           <p className="hint">JPG, PNG o WEBP · hasta 5 MB · para tu ficha pública.</p>
           {preview && (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <ImageFocus
               src={preview}
-              alt="Vista previa"
-              style={{
-                marginTop: 10,
-                maxWidth: "100%",
-                borderRadius: 12,
-                border: "1px solid var(--line)",
+              posX={posX}
+              posY={posY}
+              onChange={(x, y) => {
+                setPosX(x);
+                setPosY(y);
               }}
             />
           )}
@@ -249,9 +351,18 @@ export function FichaEditor({
           </p>
         )}
 
-        <button className="btn btn--primary" disabled={saving}>
+        <button
+          className="btn btn--primary"
+          disabled={saving || !listaParaGuardar}
+        >
           {saving ? "Guardando..." : "Guardar ficha"}
         </button>
+        {!listaParaGuardar && (
+          <p className="hint" style={{ marginTop: 8 }}>
+            Completá los campos con{" "}
+            <span style={{ color: "var(--terracota)" }}>*</span> para guardar.
+          </p>
+        )}
       </form>
 
       <div className="stack" style={{ "--gap": "18px" } as React.CSSProperties}>

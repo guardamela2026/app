@@ -47,7 +47,13 @@ export default async function FichaPublicaPage({
           <img
             src={e.imagen_url}
             alt={`Tarjeta de ${e.nombre ?? "la empresa"}`}
-            style={{ width: "100%", display: "block" }}
+            style={{
+              width: "100%",
+              height: 260,
+              objectFit: "cover",
+              objectPosition: `${e.imagen_pos_x ?? 50}% ${e.imagen_pos_y ?? 50}%`,
+              display: "block",
+            }}
           />
         )}
         <div style={{ padding: 24 }}>

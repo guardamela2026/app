@@ -16,6 +16,9 @@
   --verde: oklch(52% 0.09 130);
   --border: 2px solid var(--ink);
   --font-mono: var(--font-mono-next), ui-monospace, monospace;
+  /* Curvas fuertes para motion deliberado (las nativas son flojas). */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1); /* entradas/salidas de UI */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); /* movimiento en pantalla */
 }
 
 * {
@@ -73,7 +76,7 @@ a {
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(12px);
   }
 
   to {
@@ -89,18 +92,6 @@ a {
 
   to {
     transform: translateX(-50%);
-  }
-}
-
-@keyframes floatY {
-
-  0%,
-  100% {
-    transform: translateY(0) rotate(-6deg);
-  }
-
-  50% {
-    transform: translateY(-14px) rotate(-6deg);
   }
 }
 
@@ -212,7 +203,8 @@ a {
   border: var(--border);
   border-radius: 0;
   cursor: pointer;
-  transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.14s var(--ease-out), background 0.15s ease,
+    box-shadow 0.15s ease;
   text-align: center;
 }
 
@@ -221,15 +213,24 @@ a {
   cursor: not-allowed;
 }
 
+/* Feedback de press: se hunde al apretar (el sistema responde, no crece). */
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
 .btn--primary {
   background: var(--ink);
   color: var(--paper);
   border-color: var(--ink);
 }
 
-.btn--primary:hover:not(:disabled) {
-  background: var(--terracota);
-  transform: rotate(-1deg) scale(1.03);
+/* El hover rota+escala (movimiento): sólo con puntero fino, no en touch,
+   donde un tap dispara un falso hover. */
+@media (hover: hover) and (pointer: fine) {
+  .btn--primary:hover:not(:disabled) {
+    background: var(--terracota);
+    transform: rotate(-1deg) scale(1.03);
+  }
 }
 
 .btn--ghost {
@@ -250,6 +251,13 @@ a {
   background: var(--card);
   border: var(--border);
   border-radius: 0;
+}
+
+/* Entrada de las tarjetas del feed: fadeUp con stagger por --delay.
+   `both` mantiene el estado inicial durante el delay (no parpadea). */
+.card--entra {
+  animation: fadeUp 0.42s var(--ease-out) both;
+  animation-delay: var(--delay, 0ms);
 }
 
 /* ── Inputs ──────────────────────────────────────────────────────── */
@@ -470,15 +478,17 @@ a {
   line-height: 1;
   color: var(--ink-40);
   padding: 2px;
-  transition: transform 0.08s ease, color 0.15s ease;
+  transition: transform 0.16s var(--ease-out), color 0.15s ease;
 }
 
 .star--on {
   color: var(--terracota);
 }
 
+/* Press: se hunde al apretar; al soltar vuelve a 1 con el ease-out (rebote
+   sutil). Antes crecía a 1.25, lo contrario a un feedback de presión. */
 .star:active {
-  transform: scale(1.25);
+  transform: scale(0.9);
 }
 
 /* ── Toast ───────────────────────────────────────────────────────── */
@@ -569,4 +579,30 @@ a {
   color: var(--ink-40);
   font-weight: 700;
   margin: 32px 0 16px;
+}
+
+/* ── Movimiento reducido ─────────────────────────────────────────────
+   Quien pide menos movimiento no ve desplazamientos ni loops: el marquee
+   se detiene y las entradas colapsan a instantáneas. Se conservan opacidad
+   y color (menos movimiento, no cero feedback). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* El marquee es puro adorno en loop: sin movimiento, se queda quieto. */
+  .marquee__track {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* Las cards entran sin desplazarse (sólo aparecen). */
+  .card--entra {
+    animation: none !important;
+  }
 }

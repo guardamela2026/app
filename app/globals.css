@@ -377,6 +377,17 @@ a {
   /* Sombra offset dura: el gesto del sistema, sin blur. */
   box-shadow: 4px 4px 0 var(--ink);
   padding: 4px;
+  /* Entrada al montar: nace del trigger (arriba), no del centro.
+     @starting-style anima el primer frame sin JS. */
+  transform-origin: top center;
+  transition: opacity 0.16s var(--ease-out), transform 0.16s var(--ease-out);
+}
+
+@starting-style {
+  .selector__menu {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
 }
 
 .selector__opcion {

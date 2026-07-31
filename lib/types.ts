@@ -39,7 +39,27 @@ export interface Empresa {
   /** Foco de la imagen (object-position en %, 0-100 por eje). Default 50/50. */
   imagen_pos_x: number;
   imagen_pos_y: number;
+  /** Datos opcionales que enriquecen la ficha. */
+  horario: string | null;
+  sitio_web: string | null;
   ficha_completa: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Promedio y cantidad de votos de una empresa (vista empresa_rating). */
+export interface EmpresaRating {
+  empresa_id: string;
+  promedio: number;
+  votos: number;
+}
+
+/** Voto de estrellas de un usuario a una empresa (1-5). */
+export interface Puntuacion {
+  id: string;
+  usuario_id: string;
+  empresa_id: string;
+  valor: number;
   created_at: string;
   updated_at: string;
 }
@@ -55,5 +75,7 @@ export interface Guardado {
   usuario_id: string;
   empresa_id: string;
   origen: GuardadoOrigen;
+  /** Nota privada de quien guardó: sólo la ve esa persona. */
+  nota: string | null;
   created_at: string;
 }

@@ -123,7 +123,7 @@ export function Feed({ empresas }: { empresas: EmpresaExpandida[] }) {
             return (
               <div
                 key={e.id}
-                className="card card--entra"
+                className="card card--entra card--hover"
                 style={
                   {
                     overflow: "hidden",
@@ -137,6 +137,7 @@ export function Feed({ empresas }: { empresas: EmpresaExpandida[] }) {
                   {e.imagen_url ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
+                      className="card__img"
                       src={e.imagen_url}
                       alt={e.nombre ?? ""}
                       style={{

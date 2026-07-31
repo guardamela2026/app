@@ -1,20 +1,29 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { Phone, Mail, MapPin, AtSign, Globe, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AutoGuardar } from "@/components/auto-guardar";
+import { Rating } from "@/components/rating";
 import { instagramUrl } from "@/lib/instagram";
+import { mapsUrl, sitioWebUrl } from "@/lib/maps";
 import type { EmpresaExpandida } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-async function getEmpresa(id: string): Promise<EmpresaExpandida | null> {
+type EmpresaConRating = EmpresaExpandida & {
+  empresa_rating: { promedio: number; votos: number } | null;
+};
+
+async function getEmpresa(id: string): Promise<EmpresaConRating | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("empresas")
-    .select("*, categorias(nombre), subcategorias(nombre)")
+    .select(
+      "*, categorias(nombre), subcategorias(nombre), empresa_rating(promedio, votos)",
+    )
     .eq("id", id)
     .maybeSingle();
-  return (data as EmpresaExpandida | null) ?? null;
+  return (data as EmpresaConRating | null) ?? null;
 }
 
 export async function generateMetadata({
@@ -41,7 +50,10 @@ export default async function FichaPublicaPage({
     <div style={{ maxWidth: 560, margin: "40px auto" }}>
       {e.ficha_completa && <AutoGuardar empresaId={e.id} />}
 
-      <article className="card" style={{ overflow: "hidden" }}>
+      <article
+        className="card"
+        style={{ overflow: "hidden", boxShadow: "6px 6px 0 var(--ink)" }}
+      >
         {e.imagen_url && (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
@@ -69,37 +81,66 @@ export default async function FichaPublicaPage({
 
           <div className="stack" style={{ "--gap": "12px" } as React.CSSProperties}>
             {e.telefono && (
-              <a href={`tel:${e.telefono}`} className="row" style={{ gap: 10 }}>
-                <span>📞</span>
+              <a href={`tel:${e.telefono}`} className="dato-fila">
+                <Phone size={18} className="dato-fila__ico" />
                 <span>{e.telefono}</span>
               </a>
             )}
             {e.email && (
-              <a href={`mailto:${e.email}`} className="row" style={{ gap: 10 }}>
-                <span>✉️</span>
+              <a href={`mailto:${e.email}`} className="dato-fila">
+                <Mail size={18} className="dato-fila__ico" />
                 <span>{e.email}</span>
               </a>
             )}
             {e.direccion && (
-              <div className="row" style={{ gap: 10 }}>
-                <span>📍</span>
+              <a
+                href={mapsUrl(e.direccion)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="dato-fila dato-fila--accion"
+              >
+                <MapPin size={18} className="dato-fila__ico" />
                 <span>{e.direccion}</span>
+                <span className="dato-fila__cta">Cómo llegar →</span>
+              </a>
+            )}
+            {e.horario && (
+              <div className="dato-fila">
+                <Clock size={18} className="dato-fila__ico" />
+                <span style={{ whiteSpace: "pre-line" }}>{e.horario}</span>
               </div>
+            )}
+            {e.sitio_web && (
+              <a
+                href={sitioWebUrl(e.sitio_web)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="dato-fila"
+              >
+                <Globe size={18} className="dato-fila__ico" />
+                <span style={{ textDecoration: "underline" }}>{e.sitio_web}</span>
+              </a>
             )}
             {e.instagram && (
               <a
                 href={instagramUrl(e.instagram)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="row"
-                style={{ gap: 10, color: "var(--terracota)" }}
+                className="dato-fila"
+                style={{ color: "var(--terracota)" }}
               >
-                <span>📷</span>
-                <span style={{ textDecoration: "underline" }}>
-                  @{e.instagram}
-                </span>
+                <AtSign size={18} className="dato-fila__ico" />
+                <span style={{ textDecoration: "underline" }}>@{e.instagram}</span>
               </a>
             )}
+          </div>
+
+          <div style={{ marginTop: 22, paddingTop: 20, borderTop: "var(--border)" }}>
+            <Rating
+              empresaId={e.id}
+              promedioInicial={e.empresa_rating?.promedio ?? null}
+              votosIniciales={e.empresa_rating?.votos ?? 0}
+            />
           </div>
 
           <p className="hint" style={{ marginTop: 22 }}>

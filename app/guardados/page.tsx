@@ -9,10 +9,12 @@ import {
   onGuardadosChange,
   type SavedItem,
 } from "@/lib/guardados";
+import { NotaGuardado } from "@/components/nota-guardado";
 import type { EmpresaExpandida, GuardadoOrigen } from "@/lib/types";
 
 interface ItemGuardado extends EmpresaExpandida {
   origen: GuardadoOrigen;
+  nota: string | null;
 }
 
 export default function GuardadosPage() {
@@ -37,6 +39,16 @@ export default function GuardadosPage() {
       .select("*, categorias(nombre), subcategorias(nombre)")
       .in("id", ids);
 
+    // Notas privadas: sólo con sesión (viven en guardados.nota, RLS por dueño).
+    const notaPorId = new Map<string, string | null>();
+    if (sess.session) {
+      const { data: notas } = await supabase
+        .from("guardados")
+        .select("empresa_id, nota")
+        .in("empresa_id", ids);
+      for (const n of notas ?? []) notaPorId.set(n.empresa_id, n.nota);
+    }
+
     const origenPorId = new Map(saved.map((s) => [s.id, s.origen]));
     const rows = (data ?? []) as EmpresaExpandida[];
     // Preserva el orden de guardado (más reciente primero).
@@ -44,7 +56,11 @@ export default function GuardadosPage() {
     const ordenados: ItemGuardado[] = ids
       .map((id) => byId.get(id))
       .filter((r): r is EmpresaExpandida => !!r)
-      .map((r) => ({ ...r, origen: origenPorId.get(r.id) ?? "escaneo" }));
+      .map((r) => ({
+        ...r,
+        origen: origenPorId.get(r.id) ?? "escaneo",
+        nota: notaPorId.get(r.id) ?? null,
+      }));
     setItems(ordenados);
     setLoading(false);
   }, []);
@@ -98,7 +114,7 @@ export default function GuardadosPage() {
             <div className="section-title">{cat}</div>
             <div className="grid-cards">
               {list.map((e) => (
-                <div key={e.id} className="card" style={{ padding: 16 }}>
+                <div key={e.id} className="card card--hover" style={{ padding: 16 }}>
                   <div
                     className="row"
                     style={{ justifyContent: "space-between", alignItems: "flex-start" }}
@@ -123,6 +139,9 @@ export default function GuardadosPage() {
                       {e.origen === "estrella" ? "★ guardada" : "escaneada"}
                     </span>
                   </div>
+                  {authed && (
+                    <NotaGuardado empresaId={e.id} notaInicial={e.nota} />
+                  )}
                 </div>
               ))}
             </div>

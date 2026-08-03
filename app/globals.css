@@ -179,13 +179,149 @@ a {
   flex-shrink: 0;
   border-top: var(--border);
   margin-top: 64px;
-  padding: 28px 24px;
-  text-align: center;
+  background: var(--card);
+}
+
+.site-footer__grid {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 40px 24px 28px;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 28px;
+}
+
+.site-footer__col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.site-footer__marca {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.5px;
+  text-shadow: 2px 2px 0 var(--oro);
+}
+
+.site-footer__lema {
+  font-size: 14px;
+  color: var(--ink-60);
+  max-width: 30ch;
+}
+
+.site-footer__titulo {
   font-family: var(--font-mono);
   text-transform: uppercase;
-  letter-spacing: 2px;
-  color: var(--ink-40);
+  letter-spacing: 1px;
   font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-40);
+  margin-bottom: 4px;
+}
+
+.site-footer__col a {
+  font-size: 14px;
+  color: var(--ink);
+  transition: color 0.15s ease;
+}
+
+.site-footer__col a:hover {
+  color: var(--terracota);
+}
+
+.site-footer__nota {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-40);
+}
+
+.site-footer__base {
+  border-top: 1px solid var(--ink-40);
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-40);
+}
+
+@media (max-width: 720px) {
+  .site-footer__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .site-footer__col--marca {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ── Páginas legales (privacidad, términos) ──────────────────────────── */
+.legal {
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 0 4px;
+}
+
+.legal__aviso {
+  border: 2px dashed var(--terracota);
+  background: var(--paper-3);
+  padding: 14px 16px;
+  margin-bottom: 28px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.legal__aviso code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--card);
+  padding: 1px 5px;
+  border: 1px solid var(--ink-40);
+}
+
+.legal h1 {
+  font-size: 30px;
+  margin-bottom: 6px;
+}
+
+.legal__fecha {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-40);
+  margin-bottom: 24px;
+}
+
+.legal h2 {
+  font-size: 19px;
+  font-style: italic;
+  margin: 28px 0 10px;
+}
+
+.legal p,
+.legal li {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink);
+}
+
+.legal ul {
+  padding-left: 22px;
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.legal code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--terracota);
 }
 
 /* ── Botones ─────────────────────────────────────────────────────── */

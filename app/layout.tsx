@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Playfair_Display, Space_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { GuardadosMigrator } from "@/components/guardados-migrator";
 
 const serif = Playfair_Display({
@@ -36,9 +37,7 @@ export default function RootLayout({
         <GuardadosMigrator />
         <SiteHeader />
         <div className="container">{children}</div>
-        <footer className="site-footer">
-          Guardamela — prototipo de producto, 2026.
-        </footer>
+        <SiteFooter />
       </body>
     </html>
   );

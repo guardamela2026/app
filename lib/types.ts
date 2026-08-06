@@ -33,6 +33,8 @@ export interface Empresa {
   direccion: string | null;
   /** Handle de Instagram normalizado (sin @ ni URL). */
   instagram: string | null;
+  /** Handle de TikTok normalizado (sin @ ni URL). */
+  tiktok: string | null;
   categoria_id: string | null;
   subcategoria_id: string | null;
   imagen_url: string | null;

@@ -5,9 +5,13 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { camposFaltantes } from "@/lib/ficha";
 import { instagramHandle, instagramUrl } from "@/lib/instagram";
+import { tiktokHandle, tiktokUrl } from "@/lib/tiktok";
+import { emailValido, telefonoValido } from "@/lib/validacion";
 import { QrPanel } from "@/components/qr-panel";
 import { Selector } from "@/components/selector";
 import { DireccionInput } from "@/components/direccion-input";
+import { TelefonoInput } from "@/components/telefono-input";
+import { HorarioBuilder } from "@/components/horario-builder";
 import { ImageFocus } from "@/components/image-focus";
 import type { Categoria, Empresa, Subcategoria } from "@/lib/types";
 
@@ -33,6 +37,7 @@ export function FichaEditor({
   const [horario, setHorario] = useState(empresa.horario ?? "");
   const [sitioWeb, setSitioWeb] = useState(empresa.sitio_web ?? "");
   const [instagram, setInstagram] = useState(empresa.instagram ?? "");
+  const [tiktok, setTiktok] = useState(empresa.tiktok ?? "");
   const [categoriaId, setCategoriaId] = useState(empresa.categoria_id ?? "");
   const [subcategoriaId, setSubcategoriaId] = useState(
     empresa.subcategoria_id ?? "",
@@ -112,6 +117,14 @@ export function FichaEditor({
         throw new Error(`Falta completar: ${faltan.join(", ")}.`);
       }
 
+      // Email y teléfono son opcionales, pero si se cargan deben ser válidos.
+      if (email.trim() && !emailValido(email)) {
+        throw new Error("El email no tiene un formato válido.");
+      }
+      if (telefono.trim() && !telefonoValido(telefono)) {
+        throw new Error("El teléfono no es válido (7 a 15 dígitos).");
+      }
+
       // 1. Categoría / sub-categoría: ids del catálogo fijo, nada que crear.
       const categoria_id = categoriaId || null;
       const subcategoria_id = categoria_id ? subcategoriaId || null : null;
@@ -134,13 +147,22 @@ export function FichaEditor({
         imagen_url = `${pub.publicUrl}?v=${Date.now()}`;
       }
 
-      // 3. Instagram: se guarda el handle normalizado, no lo que se tipeó.
+      // 3. Redes: se guarda el handle normalizado, no lo que se tipeó.
       let handle: string | null = null;
       if (instagram.trim()) {
         handle = instagramHandle(instagram);
         if (!handle) {
           throw new Error(
             "El Instagram no es válido. Usá tu usuario (ej. mi.negocio) o el link de tu perfil.",
+          );
+        }
+      }
+      let handleTiktok: string | null = null;
+      if (tiktok.trim()) {
+        handleTiktok = tiktokHandle(tiktok);
+        if (!handleTiktok) {
+          throw new Error(
+            "El TikTok no es válido. Usá tu usuario (ej. mi.negocio) o el link de tu perfil.",
           );
         }
       }
@@ -156,6 +178,7 @@ export function FichaEditor({
           horario: horario.trim() || null,
           sitio_web: sitioWeb.trim() || null,
           instagram: handle,
+          tiktok: handleTiktok,
           categoria_id,
           subcategoria_id,
           imagen_url,
@@ -246,11 +269,12 @@ export function FichaEditor({
         <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
           <div className="field" style={{ flex: 1 }}>
             <label>Teléfono</label>
-            <input
-              className="input"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-            />
+            <TelefonoInput value={telefono} onChange={setTelefono} />
+            {telefono.trim() && !telefonoValido(telefono) && (
+              <p className="hint" style={{ color: "var(--terracota)" }}>
+                Teléfono inválido (7 a 15 dígitos).
+              </p>
+            )}
           </div>
           <div className="field" style={{ flex: 1 }}>
             <label>Email</label>
@@ -260,6 +284,11 @@ export function FichaEditor({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+            {email.trim() && !emailValido(email) && (
+              <p className="hint" style={{ color: "var(--terracota)" }}>
+                Email inválido (ej. nombre@dominio.com).
+              </p>
+            )}
           </div>
         </div>
 
@@ -272,17 +301,12 @@ export function FichaEditor({
           </p>
         </div>
 
+        <div className="field">
+          <label>Horario</label>
+          <HorarioBuilder value={horario} onChange={setHorario} />
+        </div>
+
         <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Horario</label>
-            <textarea
-              className="textarea"
-              value={horario}
-              onChange={(e) => setHorario(e.target.value)}
-              placeholder={"Lun a Vie 9-18\nSáb 9-13"}
-              rows={2}
-            />
-          </div>
           <div className="field" style={{ flex: 1 }}>
             <label>Sitio web</label>
             <input
@@ -295,39 +319,69 @@ export function FichaEditor({
           </div>
         </div>
 
-        <div className="field">
-          <label>Instagram</label>
-          <input
-            className="input"
-            value={instagram}
-            onChange={(e) => setInstagram(e.target.value)}
-            placeholder="mi.negocio"
-            inputMode="url"
-          />
-          {instagram.trim() ? (
-            instagramHandle(instagram) ? (
-              <p className="hint">
-                Se va a ver como{" "}
-                <a
-                  href={instagramUrl(instagramHandle(instagram)!)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "var(--terracota)" }}
-                >
-                  @{instagramHandle(instagram)}
-                </a>
-              </p>
+        <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
+          <div className="field" style={{ flex: 1 }}>
+            <label>Instagram</label>
+            <input
+              className="input"
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value)}
+              placeholder="mi.negocio"
+              inputMode="url"
+            />
+            {instagram.trim() ? (
+              instagramHandle(instagram) ? (
+                <p className="hint">
+                  Se va a ver como{" "}
+                  <a
+                    href={instagramUrl(instagramHandle(instagram)!)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "var(--terracota)" }}
+                  >
+                    @{instagramHandle(instagram)}
+                  </a>
+                </p>
+              ) : (
+                <p className="hint" style={{ color: "var(--terracota)" }}>
+                  No parece un usuario válido. Usá tu usuario o el link.
+                </p>
+              )
             ) : (
-              <p className="hint" style={{ color: "var(--terracota)" }}>
-                No parece un usuario válido. Usá tu usuario (ej. mi.negocio) o
-                el link de tu perfil.
-              </p>
-            )
-          ) : (
-            <p className="hint">
-              Tu usuario o el link de tu perfil. Opcional.
-            </p>
-          )}
+              <p className="hint">Tu usuario o link. Opcional.</p>
+            )}
+          </div>
+          <div className="field" style={{ flex: 1 }}>
+            <label>TikTok</label>
+            <input
+              className="input"
+              value={tiktok}
+              onChange={(e) => setTiktok(e.target.value)}
+              placeholder="mi.negocio"
+              inputMode="url"
+            />
+            {tiktok.trim() ? (
+              tiktokHandle(tiktok) ? (
+                <p className="hint">
+                  Se va a ver como{" "}
+                  <a
+                    href={tiktokUrl(tiktokHandle(tiktok)!)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "var(--terracota)" }}
+                  >
+                    @{tiktokHandle(tiktok)}
+                  </a>
+                </p>
+              ) : (
+                <p className="hint" style={{ color: "var(--terracota)" }}>
+                  No parece un usuario válido. Usá tu usuario o el link.
+                </p>
+              )
+            ) : (
+              <p className="hint">Tu usuario o link. Opcional.</p>
+            )}
+          </div>
         </div>
 
         <div className="field">

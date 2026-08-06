@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { camposFaltantes } from "@/lib/ficha";
 import { instagramHandle, instagramUrl } from "@/lib/instagram";
+import { emailValido, telefonoValido } from "@/lib/validacion";
 import { QrPanel } from "@/components/qr-panel";
 import { Selector } from "@/components/selector";
 import { DireccionInput } from "@/components/direccion-input";
@@ -110,6 +111,14 @@ export function FichaEditor({
       if (!imageFile && !saved.imagen_url?.trim()) faltan.push("la imagen");
       if (faltan.length > 0) {
         throw new Error(`Falta completar: ${faltan.join(", ")}.`);
+      }
+
+      // Email y teléfono son opcionales, pero si se cargan deben ser válidos.
+      if (email.trim() && !emailValido(email)) {
+        throw new Error("El email no tiene un formato válido.");
+      }
+      if (telefono.trim() && !telefonoValido(telefono)) {
+        throw new Error("El teléfono no es válido (7 a 15 dígitos).");
       }
 
       // 1. Categoría / sub-categoría: ids del catálogo fijo, nada que crear.
@@ -250,7 +259,13 @@ export function FichaEditor({
               className="input"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
+              inputMode="tel"
             />
+            {telefono.trim() && !telefonoValido(telefono) && (
+              <p className="hint" style={{ color: "var(--terracota)" }}>
+                Teléfono inválido (7 a 15 dígitos).
+              </p>
+            )}
           </div>
           <div className="field" style={{ flex: 1 }}>
             <label>Email</label>
@@ -260,6 +275,11 @@ export function FichaEditor({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+            {email.trim() && !emailValido(email) && (
+              <p className="hint" style={{ color: "var(--terracota)" }}>
+                Email inválido (ej. nombre@dominio.com).
+              </p>
+            )}
           </div>
         </div>
 

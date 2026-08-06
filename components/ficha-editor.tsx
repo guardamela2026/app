@@ -9,6 +9,8 @@ import { emailValido, telefonoValido } from "@/lib/validacion";
 import { QrPanel } from "@/components/qr-panel";
 import { Selector } from "@/components/selector";
 import { DireccionInput } from "@/components/direccion-input";
+import { TelefonoInput } from "@/components/telefono-input";
+import { HorarioBuilder } from "@/components/horario-builder";
 import { ImageFocus } from "@/components/image-focus";
 import type { Categoria, Empresa, Subcategoria } from "@/lib/types";
 
@@ -255,12 +257,8 @@ export function FichaEditor({
         <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
           <div className="field" style={{ flex: 1 }}>
             <label>Teléfono</label>
-            <input
-              className="input"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              inputMode="tel"
-            />
+            <TelefonoInput value={telefono} onChange={setTelefono} />
+            <p className="hint">País · área · número.</p>
             {telefono.trim() && !telefonoValido(telefono) && (
               <p className="hint" style={{ color: "var(--terracota)" }}>
                 Teléfono inválido (7 a 15 dígitos).
@@ -292,17 +290,12 @@ export function FichaEditor({
           </p>
         </div>
 
+        <div className="field">
+          <label>Horario</label>
+          <HorarioBuilder value={horario} onChange={setHorario} />
+        </div>
+
         <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Horario</label>
-            <textarea
-              className="textarea"
-              value={horario}
-              onChange={(e) => setHorario(e.target.value)}
-              placeholder={"Lun a Vie 9-18\nSáb 9-13"}
-              rows={2}
-            />
-          </div>
           <div className="field" style={{ flex: 1 }}>
             <label>Sitio web</label>
             <input

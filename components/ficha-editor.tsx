@@ -270,7 +270,6 @@ export function FichaEditor({
           <div className="field" style={{ flex: 1 }}>
             <label>Teléfono</label>
             <TelefonoInput value={telefono} onChange={setTelefono} />
-            <p className="hint">País · área · número.</p>
             {telefono.trim() && !telefonoValido(telefono) && (
               <p className="hint" style={{ color: "var(--terracota)" }}>
                 Teléfono inválido (7 a 15 dígitos).

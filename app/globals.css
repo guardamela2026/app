@@ -944,6 +944,37 @@ a {
   flex-wrap: wrap;
 }
 
+/* ── Teléfono en partes (país fijo / área / número) ──────────────────── */
+.tel-input {
+  display: flex;
+  align-items: flex-start; /* los inputs alineados arriba, labels debajo */
+  gap: 8px;
+}
+
+.tel-input__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.tel-input__label {
+  text-align: center;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-40);
+}
+
+/* Campo deshabilitado (el país fijo): griseado, sin cursor de edición. */
+.input:disabled {
+  background: var(--paper-3);
+  color: var(--ink-40);
+  cursor: not-allowed;
+}
+
 /* ── Movimiento reducido ─────────────────────────────────────────────
    Quien pide menos movimiento no ve desplazamientos ni loops: el marquee
    se detiene y las entradas colapsan a instantáneas. Se conservan opacidad

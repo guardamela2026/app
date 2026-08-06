@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { camposFaltantes } from "@/lib/ficha";
 import { instagramHandle, instagramUrl } from "@/lib/instagram";
+import { tiktokHandle, tiktokUrl } from "@/lib/tiktok";
 import { emailValido, telefonoValido } from "@/lib/validacion";
 import { QrPanel } from "@/components/qr-panel";
 import { Selector } from "@/components/selector";
@@ -36,6 +37,7 @@ export function FichaEditor({
   const [horario, setHorario] = useState(empresa.horario ?? "");
   const [sitioWeb, setSitioWeb] = useState(empresa.sitio_web ?? "");
   const [instagram, setInstagram] = useState(empresa.instagram ?? "");
+  const [tiktok, setTiktok] = useState(empresa.tiktok ?? "");
   const [categoriaId, setCategoriaId] = useState(empresa.categoria_id ?? "");
   const [subcategoriaId, setSubcategoriaId] = useState(
     empresa.subcategoria_id ?? "",
@@ -145,13 +147,22 @@ export function FichaEditor({
         imagen_url = `${pub.publicUrl}?v=${Date.now()}`;
       }
 
-      // 3. Instagram: se guarda el handle normalizado, no lo que se tipeó.
+      // 3. Redes: se guarda el handle normalizado, no lo que se tipeó.
       let handle: string | null = null;
       if (instagram.trim()) {
         handle = instagramHandle(instagram);
         if (!handle) {
           throw new Error(
             "El Instagram no es válido. Usá tu usuario (ej. mi.negocio) o el link de tu perfil.",
+          );
+        }
+      }
+      let handleTiktok: string | null = null;
+      if (tiktok.trim()) {
+        handleTiktok = tiktokHandle(tiktok);
+        if (!handleTiktok) {
+          throw new Error(
+            "El TikTok no es válido. Usá tu usuario (ej. mi.negocio) o el link de tu perfil.",
           );
         }
       }
@@ -167,6 +178,7 @@ export function FichaEditor({
           horario: horario.trim() || null,
           sitio_web: sitioWeb.trim() || null,
           instagram: handle,
+          tiktok: handleTiktok,
           categoria_id,
           subcategoria_id,
           imagen_url,
@@ -308,39 +320,69 @@ export function FichaEditor({
           </div>
         </div>
 
-        <div className="field">
-          <label>Instagram</label>
-          <input
-            className="input"
-            value={instagram}
-            onChange={(e) => setInstagram(e.target.value)}
-            placeholder="mi.negocio"
-            inputMode="url"
-          />
-          {instagram.trim() ? (
-            instagramHandle(instagram) ? (
-              <p className="hint">
-                Se va a ver como{" "}
-                <a
-                  href={instagramUrl(instagramHandle(instagram)!)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "var(--terracota)" }}
-                >
-                  @{instagramHandle(instagram)}
-                </a>
-              </p>
+        <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
+          <div className="field" style={{ flex: 1 }}>
+            <label>Instagram</label>
+            <input
+              className="input"
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value)}
+              placeholder="mi.negocio"
+              inputMode="url"
+            />
+            {instagram.trim() ? (
+              instagramHandle(instagram) ? (
+                <p className="hint">
+                  Se va a ver como{" "}
+                  <a
+                    href={instagramUrl(instagramHandle(instagram)!)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "var(--terracota)" }}
+                  >
+                    @{instagramHandle(instagram)}
+                  </a>
+                </p>
+              ) : (
+                <p className="hint" style={{ color: "var(--terracota)" }}>
+                  No parece un usuario válido. Usá tu usuario o el link.
+                </p>
+              )
             ) : (
-              <p className="hint" style={{ color: "var(--terracota)" }}>
-                No parece un usuario válido. Usá tu usuario (ej. mi.negocio) o
-                el link de tu perfil.
-              </p>
-            )
-          ) : (
-            <p className="hint">
-              Tu usuario o el link de tu perfil. Opcional.
-            </p>
-          )}
+              <p className="hint">Tu usuario o link. Opcional.</p>
+            )}
+          </div>
+          <div className="field" style={{ flex: 1 }}>
+            <label>TikTok</label>
+            <input
+              className="input"
+              value={tiktok}
+              onChange={(e) => setTiktok(e.target.value)}
+              placeholder="mi.negocio"
+              inputMode="url"
+            />
+            {tiktok.trim() ? (
+              tiktokHandle(tiktok) ? (
+                <p className="hint">
+                  Se va a ver como{" "}
+                  <a
+                    href={tiktokUrl(tiktokHandle(tiktok)!)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "var(--terracota)" }}
+                  >
+                    @{tiktokHandle(tiktok)}
+                  </a>
+                </p>
+              ) : (
+                <p className="hint" style={{ color: "var(--terracota)" }}>
+                  No parece un usuario válido. Usá tu usuario o el link.
+                </p>
+              )
+            ) : (
+              <p className="hint">Tu usuario o link. Opcional.</p>
+            )}
+          </div>
         </div>
 
         <div className="field">

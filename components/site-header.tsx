@@ -74,6 +74,7 @@ export function SiteHeader() {
                 </span>
               )}
               {rol === "empresa" && <Link href="/panel">Panel</Link>}
+              <Link href="/cuenta">Mi cuenta</Link>
               <button onClick={signOut}>Salir</button>
             </>
           ) : (

@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Phone, Mail, MapPin, AtSign, Globe, Clock } from "lucide-react";
+import { Phone, Mail, MapPin, AtSign, Globe, Clock, Music2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AutoGuardar } from "@/components/auto-guardar";
 import { Rating } from "@/components/rating";
 import { instagramUrl } from "@/lib/instagram";
+import { tiktokUrl } from "@/lib/tiktok";
 import { mapsUrl, sitioWebUrl } from "@/lib/maps";
 import type { EmpresaExpandida } from "@/lib/types";
 
@@ -134,6 +135,18 @@ export default async function FichaPublicaPage({
               >
                 <AtSign size={18} className="dato-fila__ico" />
                 <span style={{ textDecoration: "underline" }}>@{e.instagram}</span>
+              </a>
+            )}
+            {e.tiktok && (
+              <a
+                href={tiktokUrl(e.tiktok)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="dato-fila"
+                style={{ color: "var(--terracota)" }}
+              >
+                <Music2 size={18} className="dato-fila__ico" />
+                <span style={{ textDecoration: "underline" }}>@{e.tiktok}</span>
               </a>
             )}
           </div>

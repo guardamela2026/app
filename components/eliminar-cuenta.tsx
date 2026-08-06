@@ -3,38 +3,97 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+
+const DIAS_GRACIA = 30;
 
 /**
- * Botón de eliminar cuenta con confirmación por escrito: acción irreversible,
- * así que pedimos tipear ELIMINAR antes de habilitar. Llama a la route del
- * servidor (que usa service_role) y redirige al home ya sin sesión.
+ * Soft delete de cuenta. "Eliminar" programa la baja a DIAS_GRACIA días (RPC
+ * programar_eliminacion_cuenta) y cierra sesión; dentro del plazo el usuario
+ * puede cancelar. La purga real la hace un cron en la base. Pide tipear
+ * ELIMINAR porque, aunque reversible, oculta la cuenta de inmediato.
  */
-export function EliminarCuenta() {
+export function EliminarCuenta({
+  programadaInicial,
+}: {
+  programadaInicial: string | null;
+}) {
   const router = useRouter();
+  const [programada, setProgramada] = useState<string | null>(programadaInicial);
   const [abierto, setAbierto] = useState(false);
   const [texto, setTexto] = useState("");
-  const [borrando, setBorrando] = useState(false);
+  const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const confirmado = texto.trim().toUpperCase() === "ELIMINAR";
 
-  async function eliminar() {
+  async function programar() {
     if (!confirmado) return;
-    setBorrando(true);
+    setOcupado(true);
     setError(null);
-    try {
-      const res = await fetch("/api/eliminar-cuenta", { method: "POST" });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "No se pudo eliminar la cuenta.");
-      }
-      // Cuenta borrada y sesión cerrada: al home.
-      router.push("/");
-      router.refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo eliminar la cuenta.");
-      setBorrando(false);
+    const supabase = createClient();
+    const { error } = await supabase.rpc("programar_eliminacion_cuenta", {
+      dias: DIAS_GRACIA,
+    });
+    if (error) {
+      setError(error.message);
+      setOcupado(false);
+      return;
     }
+    // Baja programada: cerramos sesión y volvemos al home.
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
+
+  async function cancelar() {
+    setOcupado(true);
+    setError(null);
+    const supabase = createClient();
+    const { error } = await supabase.rpc("cancelar_eliminacion_cuenta");
+    if (error) {
+      setError(error.message);
+      setOcupado(false);
+      return;
+    }
+    setProgramada(null);
+    setOcupado(false);
+    router.refresh();
+  }
+
+  // Cuenta ya en proceso de baja: ofrecer recuperarla.
+  if (programada) {
+    const fecha = new Date(programada).toLocaleDateString("es", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    return (
+      <div className="card" style={{ padding: 20, borderColor: "var(--terracota)" }}>
+        <div className="row" style={{ gap: 8, alignItems: "center" }}>
+          <AlertTriangle size={18} style={{ color: "var(--terracota)" }} />
+          <h2 style={{ fontSize: 18, margin: 0 }}>Cuenta en proceso de eliminación</h2>
+        </div>
+        <p className="hint" style={{ marginTop: 8 }}>
+          Tu cuenta y tus datos se borrarán definitivamente el <strong>{fecha}</strong>.
+          Hasta entonces podés recuperarla.
+        </p>
+        {error && (
+          <p style={{ color: "var(--terracota)", fontSize: 13, marginTop: 10 }}>
+            {error}
+          </p>
+        )}
+        <button
+          type="button"
+          className="btn btn--primary"
+          style={{ marginTop: 14 }}
+          disabled={ocupado}
+          onClick={cancelar}
+        >
+          {ocupado ? "Recuperando…" : "Recuperar mi cuenta"}
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -44,8 +103,9 @@ export function EliminarCuenta() {
         <h2 style={{ fontSize: 18, margin: 0 }}>Eliminar cuenta</h2>
       </div>
       <p className="hint" style={{ marginTop: 8 }}>
-        Borra tu cuenta y todos tus datos (fichas, guardados, puntuaciones y
-        notas). Esta acción no se puede deshacer.
+        Tu cuenta se ocultará de inmediato y se borrará definitivamente a los{" "}
+        {DIAS_GRACIA} días (fichas, guardados, puntuaciones y notas). Durante ese
+        plazo podés recuperarla iniciando sesión de nuevo.
       </p>
 
       {!abierto ? (
@@ -79,15 +139,15 @@ export function EliminarCuenta() {
               type="button"
               className="btn btn--primary"
               style={{ background: "var(--terracota)", borderColor: "var(--terracota)" }}
-              disabled={!confirmado || borrando}
-              onClick={eliminar}
+              disabled={!confirmado || ocupado}
+              onClick={programar}
             >
-              {borrando ? "Eliminando…" : "Eliminar definitivamente"}
+              {ocupado ? "Procesando…" : "Eliminar mi cuenta"}
             </button>
             <button
               type="button"
               className="btn btn--ghost"
-              disabled={borrando}
+              disabled={ocupado}
               onClick={() => {
                 setAbierto(false);
                 setTexto("");
